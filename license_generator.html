@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>МКонструктор 3D — Генератор Лицензионных Ключей (Панель Владельца)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-amber-500 selection:text-black">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-30 px-6 py-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20 text-slate-950 font-black text-xl">
+          👑
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold tracking-tight text-white">МКонструктор <span class="text-amber-400">KeyGen</span></h1>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">MASTER SAAS</span>
+          </div>
+          <p class="text-xs text-slate-400">Автономный генератор лицензий и сертификатов клиентов</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center gap-1.5">
+          <span>Вернуться в МКонструктор</span>
+          <span>→</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-6xl mx-auto w-full px-4 py-8 flex-1">
+    
+    <!-- Hero Banner -->
+    <div class="mb-8 p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 relative overflow-hidden">
+      <div class="relative z-10 max-w-2xl">
+        <h2 class="text-2xl font-extrabold text-white mb-2">Генерация цифровых ключей доступа МКонструктор</h2>
+        <p class="text-sm text-slate-400 leading-relaxed">
+          Этот инструмент работает полностью автономно (offline). Ключи содержат цифровую контрольную подпись алгоритма HMAC-like salt. Они распознаются и мгновенно активируются в веб-приложении МКонструктор без обращения к внешнему серверу.
+        </p>
+      </div>
+      <div class="absolute right-6 -bottom-6 text-9xl opacity-5 select-none pointer-events-none font-mono">
+        MK
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex border-b border-slate-800 mb-6 gap-2">
+      <button id="tabBtnGenerate" onclick="switchTab('generate')" class="px-5 py-2.5 font-medium text-sm border-b-2 border-amber-500 text-amber-400 flex items-center gap-2 transition">
+        <span>⚡ Выдать новый ключ</span>
+      </button>
+      <button id="tabBtnRegistry" onclick="switchTab('registry')" class="px-5 py-2.5 font-medium text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 transition">
+        <span>📋 Реестр выданных лицензий</span>
+        <span id="registryCountBadge" class="px-2 py-0.5 rounded-full text-xs bg-slate-800 text-slate-300">0</span>
+      </button>
+      <button id="tabBtnVerify" onclick="switchTab('verify')" class="px-5 py-2.5 font-medium text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 transition">
+        <span>🔍 Проверить ключ</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: GENERATE KEY -->
+    <div id="tabContentGenerate" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <!-- Form column -->
+      <div class="lg:col-span-5 bg-slate-900/70 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+        <div>
+          <h3 class="text-base font-semibold text-white mb-4 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            Параметры выдачи лицензии
+          </h3>
+
+          <div class="space-y-4 text-xs">
+            <div>
+              <label class="block text-slate-400 mb-1.5 font-medium">ФИО клиента / Название мебельной фабрики</label>
+              <input id="inputClientName" type="text" placeholder="ИП Иванов / Фабрика Стиль" value="VIP Пользователь" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition text-sm">
+            </div>
+
+            <div>
+              <label class="block text-slate-400 mb-1.5 font-medium">Уровень доступа (Тариф)</label>
+              <select id="selectTier" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-200 focus:outline-none focus:border-amber-500 transition text-sm">
+                <option value="all_inclusive" selected>👑 All-Inclusive (Кухни + Шкафы + Раскрой + PDF)</option>
+                <option value="kitchen_pro">🍳 Кухни PRO (Полный доступ к кухонным модулям)</option>
+                <option value="wardrobe_pro">🚪 Шкафы PRO (Модули шкафов-купе и гардеробных)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-slate-400 mb-1.5 font-medium">Срок действия лицензии</label>
+              <select id="selectDuration" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-200 focus:outline-none focus:border-amber-500 transition text-sm">
+                <option value="365" selected>1 Год (365 дней)</option>
+                <option value="180">Полгода (180 дней)</option>
+                <option value="90">3 Месяца (90 дней)</option>
+                <option value="30">1 Месяц (30 дней)</option>
+                <option value="9999">👑 Бессрочно (VIP Lifetime)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-slate-400 mb-1.5 font-medium">Контакты / Заметки (необязательно)</label>
+              <input id="inputNotes" type="text" placeholder="+7 999 000-00-00 / @telegram" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition text-sm">
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-slate-800">
+          <button onclick="handleGenerateClick()" class="w-full py-3.5 px-4 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-500/20 active:scale-[0.98] transition flex items-center justify-center gap-2 text-sm">
+            <span>✨ Сгенерировать ключ</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Result Card column -->
+      <div class="lg:col-span-7 bg-slate-900/70 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-semibold text-white flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              Сформированный цифровой ключ
+            </h3>
+            <span id="keyStatusBadge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Готов к отправке</span>
+          </div>
+
+          <!-- The Key Display -->
+          <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 text-center relative group">
+            <div class="text-[11px] text-slate-500 uppercase tracking-widest font-bold mb-1.5">ЛИЦЕНЗИОННЫЙ КЛЮЧ АКТИВАЦИИ</div>
+            <div id="displayKey" class="text-2xl sm:text-3xl font-mono font-bold tracking-wider text-amber-400 select-all py-1">
+              BPL-A365-7M2K-9X4F
+            </div>
+            <div id="displayKeyMeta" class="text-xs text-slate-400 mt-2 flex items-center justify-center gap-3">
+              <span>Тариф: <b>All-Inclusive</b></span>
+              <span>•</span>
+              <span>Срок: <b>365 дней</b></span>
+            </div>
+          </div>
+
+          <!-- Client Certificate Message -->
+          <div class="mt-5">
+            <label class="block text-xs text-slate-400 mb-1.5 font-medium flex items-center justify-between">
+              <span>Текст сертификата для отправки клиенту:</span>
+              <span class="text-[11px] text-slate-500">WhatsApp / Telegram / E-mail</span>
+            </label>
+            <textarea id="displayCertificate" rows="8" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs text-slate-300 font-mono leading-relaxed resize-none focus:outline-none focus:border-slate-700 select-all"></textarea>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-800 flex flex-wrap gap-2.5">
+          <button onclick="copyToClipboard('key')" class="flex-1 py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition active:scale-95 flex items-center justify-center gap-1.5">
+            <span>📋 Скопировать только ключ</span>
+          </button>
+          <button onclick="copyToClipboard('cert')" class="flex-1 py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition active:scale-95 flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/20">
+            <span>💬 Скопировать сообщение клиенту</span>
+          </button>
+          <button onclick="downloadCertificateFile()" class="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition active:scale-95 flex items-center justify-center gap-1.5" title="Сохранить в .txt">
+            <span>💾 .txt</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TAB 2: REGISTRY -->
+    <div id="tabContentRegistry" class="hidden">
+      <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h3 class="text-base font-semibold text-white">Реестр выданных лицензий клиентам</h3>
+            <p class="text-xs text-slate-400">Список всех созданных на этом устройстве лицензий сохраняется в локальной базе</p>
+          </div>
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <input id="registrySearchInput" oninput="renderRegistryTable()" type="text" placeholder="Поиск по клиенту или ключу..." class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 placeholder-slate-600 w-full sm:w-64 focus:outline-none focus:border-amber-500">
+            <button onclick="clearRegistry()" class="px-3 py-1.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs transition" title="Очистить весь реестр">
+              Очистить
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
+                <th class="py-3 px-3">Дата</th>
+                <th class="py-3 px-3">Клиент</th>
+                <th class="py-3 px-3">Тариф</th>
+                <th class="py-3 px-3">Срок</th>
+                <th class="py-3 px-3">Ключ</th>
+                <th class="py-3 px-3 text-right">Действия</th>
+              </tr>
+            </thead>
+            <tbody id="registryTableBody" class="divide-y divide-slate-800/60 font-mono">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: VERIFY -->
+    <div id="tabContentVerify" class="hidden">
+      <div class="max-w-2xl mx-auto bg-slate-900/70 border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <h3 class="text-base font-semibold text-white mb-2">Проверка подлинности любого ключа</h3>
+        <p class="text-xs text-slate-400 mb-6">Введите ключ для проверки цифровой подписи, тарифа и срока действия</p>
+
+        <div class="flex gap-2 mb-6">
+          <input id="verifyKeyInput" type="text" placeholder="BPL-A365-XXXX-YYYY" class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 font-mono tracking-wider text-base focus:outline-none focus:border-amber-500">
+          <button onclick="handleVerifyClick()" class="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition">
+            Проверить
+          </button>
+        </div>
+
+        <div id="verifyResultBox" class="hidden p-5 rounded-2xl border text-xs"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-900 bg-slate-950 py-4 px-6 text-center text-xs text-slate-600">
+    МКонструктор 3D • Digital License Authentication Engine v2.0 • Offline Verified HMAC Protocol
+  </footer>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-slate-800 border border-amber-500/40 text-amber-300 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-medium">
+    <span id="toastIcon">✨</span>
+    <span id="toastMessage">Ключ скопирован</span>
+  </div>
+
+  <script>
+    // --- Cryptographic Hashing Protocol (Identical to licenseManager.ts) ---
+    const SECRET_SALT = 'BPL2026_MASTER_SECRET_SALT_SAAS_AUTH';
+    const REGISTRY_STORAGE_KEY = 'biplaner_issued_licenses_registry';
+
+    const CHARS = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+
+    function randomString(length = 4) {
+      let result = '';
+      for (let i = 0; i < length; i++) {
+        result += CHARS.charAt(Math.floor(Math.random() * CHARS.length));
+      }
+      return result;
+    }
+
+    function calculateSignature(data) {
+      let hash = 5381;
+      const combined = `${data}:${SECRET_SALT}`;
+      for (let i = 0; i < combined.length; i++) {
+        hash = ((hash << 5) + hash) + combined.charCodeAt(i);
+        hash = hash & 0xffffffff;
+      }
+      const positiveHash = Math.abs(hash);
+      let sig = '';
+      let temp = positiveHash;
+      for (let i = 0; i < 4; i++) {
+        sig += CHARS.charAt(temp % CHARS.length);
+        temp = Math.floor(temp / CHARS.length);
+      }
+      return sig;
+    }
+
+    function generateKey({ clientName, tier, durationDays, notes }) {
+      let tierChar = 'A';
+      if (tier === 'kitchen_pro') tierChar = 'K';
+      else if (tier === 'wardrobe_pro') tierChar = 'W';
+
+      let durCode = '365';
+      if (durationDays >= 9999) {
+        durCode = 'INF';
+        tierChar = 'V';
+      } else if (durationDays === 30) {
+        durCode = '030';
+      } else if (durationDays === 90) {
+        durCode = '090';
+      } else if (durationDays === 180) {
+        durCode = '180';
+      } else {
+        durCode = '365';
+      }
+
+      const token = randomString(4);
+      const dataPayload = `${tierChar}${durCode}-${token}`;
+      const checksum = calculateSignature(dataPayload);
+      const fullKey = `MK-${dataPayload}-${checksum}`;
+
+      let expiresAt = null;
+      if (durationDays < 9999) {
+        const d = new Date();
+        d.setDate(d.getDate() + durationDays);
+        expiresAt = d.toISOString();
+      }
+
+      const item = {
+        id: `lic_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+        key: fullKey,
+        clientName: clientName || 'Лицензиат МКонструктор',
+        tier: durCode === 'INF' ? 'all_inclusive' : tier,
+        durationDays,
+        issuedAt: new Date().toISOString(),
+        expiresAt,
+        notes: notes || '',
+        status: 'active'
+      };
+
+      saveIssuedKey(item);
+      return item;
+    }
+
+    function verifyKey(rawKey) {
+      const cleaned = (rawKey || '').trim().toUpperCase();
+      if (!cleaned) return { valid: false, reason: 'Ключ не введен' };
+
+      // Master keys
+      if (cleaned === 'MK-PRO-LIFETIME' || cleaned === 'BPL-PRO-LIFETIME') {
+        return { valid: true, tier: 'all_inclusive', durationDays: 9999, expiresAt: null, isMaster: true };
+      }
+      if (cleaned === 'MK-VIP-2026' || cleaned === 'MK-ALL-PRO' || cleaned === 'BPL-VIP-2026' || cleaned === 'BPL-ALL-PRO') {
+        return { valid: true, tier: 'all_inclusive', durationDays: 365, expiresAt: '2027-01-01', isMaster: true };
+      }
+      if (cleaned === 'MK-KITCHEN-PRO' || cleaned === 'BPL-KITCHEN-PRO') {
+        return { valid: true, tier: 'kitchen_pro', durationDays: 90, expiresAt: '2026-06-01', isMaster: true };
+      }
+      if (cleaned === 'MK-WARDROBE-PRO' || cleaned === 'BPL-WARDROBE-PRO') {
+        return { valid: true, tier: 'wardrobe_pro', durationDays: 90, expiresAt: '2026-06-01', isMaster: true };
+      }
+
+      const parts = cleaned.split('-');
+      if (parts.length !== 4 || (parts[0] !== 'MK' && parts[0] !== 'BPL')) {
+        return { valid: false, reason: 'Неверный формат ключа (ожидается MK-XXXX-XXXX-XXXX)' };
+      }
+
+      const prefix = parts[1];
+      const token = parts[2];
+      const expectedChecksum = calculateSignature(`${prefix}-${token}`);
+
+      if (parts[3] !== expectedChecksum) {
+        return { valid: false, reason: 'Цифровая подпись ключа повреждена или неверна' };
+      }
+
+      const tierChar = prefix.charAt(0);
+      const durCode = prefix.slice(1);
+
+      let tier = 'all_inclusive';
+      if (tierChar === 'K') tier = 'kitchen_pro';
+      else if (tierChar === 'W') tier = 'wardrobe_pro';
+
+      let durationDays = 365;
+      let expiresAt = null;
+
+      if (durCode === 'INF') {
+        durationDays = 9999;
+      } else {
+        durationDays = parseInt(durCode, 10) || 365;
+        const d = new Date();
+        d.setDate(d.getDate() + durationDays);
+        expiresAt = d.toISOString();
+      }
+
+      return { valid: true, tier, durationDays, expiresAt, isMaster: false };
+    }
+
+    function formatCertificate(lic) {
+      const tierName = lic.tier === 'all_inclusive' ? 'All-Inclusive (Кухни + Шкафы + Раскрой + PDF)'
+        : lic.tier === 'kitchen_pro' ? 'Кухни PRO'
+        : 'Шкафы PRO';
+
+      const durText = lic.durationDays >= 9999 ? 'Бессрочная лицензия (VIP Lifetime)' : `${lic.durationDays} календарных дней`;
+      const dateStr = new Date(lic.issuedAt).toLocaleDateString('ru-RU');
+
+      return `=====================================================
+СЕРТИФИКАТ ЛИЦЕНЗИИ МКОНСТРУКТОР 3D
+=====================================================
+Владелец: ${lic.clientName}
+Тариф: ${tierName}
+Срок действия: ${durText}
+Дата активации: ${dateStr}
+
+ВАШ ЛИЦЕНЗИОННЫЙ КЛЮЧ:
+${lic.key}
+
+ИНСТРУКЦИЯ ПО АКТИВАЦИИ:
+1. Откройте программу МКонструктор 3D в браузере
+2. В верхнем правом углу нажмите кнопку "Демо" или "PRO Лицензия"
+3. В появившемся окне вставьте ключ выше и нажмите "Активировать"
+4. Все ограничения (максимум 8 модулей) будут мгновенно сняты!
+
+Техническая поддержка МКонструктор 3D: support@mkonstruktor.ru
+=====================================================`;
+    }
+
+    // --- Registry Storage ---
+    function getIssuedKeys() {
+      try {
+        const raw = localStorage.getItem(REGISTRY_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveIssuedKey(item) {
+      const keys = getIssuedKeys();
+      keys.unshift(item);
+      localStorage.setItem(REGISTRY_STORAGE_KEY, JSON.stringify(keys));
+      updateRegistryCount();
+    }
+
+    function deleteIssuedKey(id) {
+      if (!confirm('Удалить этот ключ из реестра?')) return;
+      const keys = getIssuedKeys().filter(k => k.id !== id);
+      localStorage.setItem(REGISTRY_STORAGE_KEY, JSON.stringify(keys));
+      renderRegistryTable();
+      updateRegistryCount();
+      showToast('🗑️ Ключ удален из реестра');
+    }
+
+    function clearRegistry() {
+      if (!confirm('Вы уверены, что хотите полностью очистить историю выданных ключей?')) return;
+      localStorage.removeItem(REGISTRY_STORAGE_KEY);
+      renderRegistryTable();
+      updateRegistryCount();
+      showToast('🗑️ Реестр очищен');
+    }
+
+    function updateRegistryCount() {
+      const badge = document.getElementById('registryCountBadge');
+      if (badge) {
+        badge.innerText = getIssuedKeys().length;
+      }
+    }
+
+    // --- State and UI handling ---
+    let currentLicense = null;
+
+    function handleGenerateClick() {
+      const clientName = document.getElementById('inputClientName').value || 'VIP Клиент';
+      const tier = document.getElementById('selectTier').value;
+      const durationDays = parseInt(document.getElementById('selectDuration').value, 10);
+      const notes = document.getElementById('inputNotes').value;
+
+      currentLicense = generateKey({ clientName, tier, durationDays, notes });
+      updateDisplay();
+      showToast('✨ Ключ успешно сгенерирован и записан в реестр!');
+    }
+
+    function updateDisplay() {
+      if (!currentLicense) return;
+      document.getElementById('displayKey').innerText = currentLicense.key;
+      
+      const tierName = currentLicense.tier === 'all_inclusive' ? 'All-Inclusive'
+        : currentLicense.tier === 'kitchen_pro' ? 'Кухни PRO'
+        : 'Шкафы PRO';
+      
+      const durText = currentLicense.durationDays >= 9999 ? 'Бессрочно' : `${currentLicense.durationDays} дней`;
+
+      document.getElementById('displayKeyMeta').innerHTML = `
+        <span>Клиент: <b>${escapeHtml(currentLicense.clientName)}</b></span>
+        <span>•</span>
+        <span>Тариф: <b>${tierName}</b></span>
+        <span>•</span>
+        <span>Срок: <b>${durText}</b></span>
+      `;
+
+      document.getElementById('displayCertificate').value = formatCertificate(currentLicense);
+    }
+
+    function copyToClipboard(mode) {
+      if (!currentLicense) return;
+      const text = mode === 'key' ? currentLicense.key : formatCertificate(currentLicense);
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(mode === 'key' ? '🔑 Ключ скопирован в буфер' : '📋 Сертификат скопирован в буфер');
+      });
+    }
+
+    function downloadCertificateFile() {
+      if (!currentLicense) return;
+      const text = formatCertificate(currentLicense);
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Лицензия_МКонструктор_${currentLicense.clientName.replace(/[^a-zA-Zа-яА-Я0-9]/g, '_')}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('💾 Файл сертификата сохранен');
+    }
+
+    function renderRegistryTable() {
+      const tbody = document.getElementById('registryTableBody');
+      const search = (document.getElementById('registrySearchInput').value || '').toLowerCase();
+      const keys = getIssuedKeys();
+
+      const filtered = keys.filter(k => 
+        k.clientName.toLowerCase().includes(search) || 
+        k.key.toLowerCase().includes(search) ||
+        (k.notes && k.notes.toLowerCase().includes(search))
+      );
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center py-8 text-slate-500 font-sans text-xs">
+              ${keys.length === 0 ? 'Реестр пуст. Сгенерируйте ваш первый ключ во вкладке выше.' : 'По вашему запросу ничего не найдено.'}
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(k => {
+        const dateStr = new Date(k.issuedAt).toLocaleDateString('ru-RU');
+        const tierBadge = k.tier === 'all_inclusive'
+          ? '<span class="px-2 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30">All-Inclusive</span>'
+          : k.tier === 'kitchen_pro'
+          ? '<span class="px-2 py-0.5 rounded text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/30">Кухни PRO</span>'
+          : '<span class="px-2 py-0.5 rounded text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/30">Шкафы PRO</span>';
+        
+        const durText = k.durationDays >= 9999 ? 'Бессрочно' : `${k.durationDays} дн.`;
+
+        return `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="py-3 px-3 text-slate-400 font-sans">${dateStr}</td>
+            <td class="py-3 px-3 text-slate-200 font-sans font-medium">
+              ${escapeHtml(k.clientName)}
+              ${k.notes ? `<div class="text-[11px] text-slate-500 font-normal">${escapeHtml(k.notes)}</div>` : ''}
+            </td>
+            <td class="py-3 px-3 font-sans">${tierBadge}</td>
+            <td class="py-3 px-3 text-slate-300 font-sans">${durText}</td>
+            <td class="py-3 px-3 text-amber-400 font-bold">${k.key}</td>
+            <td class="py-3 px-3 text-right font-sans">
+              <div class="flex items-center justify-end gap-1.5">
+                <button onclick="navigator.clipboard.writeText('${k.key}'); showToast('Ключ скопирован');" class="p-1.5 hover:bg-slate-700 rounded text-slate-300 hover:text-white" title="Скопировать ключ">
+                  📋
+                </button>
+                <button onclick="deleteIssuedKey('${k.id}')" class="p-1.5 hover:bg-red-500/20 rounded text-red-400" title="Удалить">
+                  ✕
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function handleVerifyClick() {
+      const input = document.getElementById('verifyKeyInput').value;
+      const res = verifyKey(input);
+      const box = document.getElementById('verifyResultBox');
+      box.classList.remove('hidden');
+
+      if (res.valid) {
+        box.className = 'p-5 rounded-2xl border bg-emerald-500/10 border-emerald-500/30 text-emerald-200';
+        box.innerHTML = `
+          <div class="flex items-center gap-2 text-sm font-bold text-emerald-400 mb-2">
+            <span>✅ Ключ подлинный и действителен!</span>
+            ${res.isMaster ? '<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px]">Master VIP</span>' : ''}
+          </div>
+          <div class="space-y-1 text-xs">
+            <div>Тариф: <b class="text-white">${res.tier.toUpperCase()}</b></div>
+            <div>Срок: <b class="text-white">${res.durationDays >= 9999 ? 'Бессрочно (Lifetime)' : res.durationDays + ' дней'}</b></div>
+            <div>Окончание: <b class="text-white">${res.expiresAt ? new Date(res.expiresAt).toLocaleDateString('ru-RU') : 'Никогда'}</b></div>
+          </div>
+        `;
+      } else {
+        box.className = 'p-5 rounded-2xl border bg-red-500/10 border-red-500/30 text-red-300';
+        box.innerHTML = `
+          <div class="text-sm font-bold text-red-400 mb-1">❌ Ключ не прошел проверку!</div>
+          <div class="text-xs text-red-300">${escapeHtml(res.reason || 'Неизвестная ошибка проверки')}</div>
+        `;
+      }
+    }
+
+    function switchTab(tab) {
+      ['generate', 'registry', 'verify'].forEach(t => {
+        const content = document.getElementById(`tabContent${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (t === tab) {
+          content.classList.remove('hidden');
+          btn.className = 'px-5 py-2.5 font-medium text-sm border-b-2 border-amber-500 text-amber-400 flex items-center gap-2 transition';
+        } else {
+          content.classList.add('hidden');
+          btn.className = 'px-5 py-2.5 font-medium text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 transition';
+        }
+      });
+
+      if (tab === 'registry') {
+        renderRegistryTable();
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMessage').innerText = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3000);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Init
+    handleGenerateClick();
+    updateRegistryCount();
+  </script>
+</body>
+</html>

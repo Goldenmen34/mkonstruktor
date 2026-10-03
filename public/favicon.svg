@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+
+    <!-- Border Gradient -->
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#2563eb" />
+    </linearGradient>
+
+    <!-- MK Monogram Gradient -->
+    <linearGradient id="mkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="45%" stop-color="#60a5fa" />
+      <stop offset="100%" stop-color="#c084fc" />
+    </linearGradient>
+
+    <!-- Isometric Cube Top Gradient -->
+    <linearGradient id="cubeTop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+
+    <!-- Isometric Cube Left Gradient -->
+    <linearGradient id="cubeLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0369a1" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <!-- Isometric Cube Right Gradient -->
+    <linearGradient id="cubeRight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#1e1b4b" />
+    </linearGradient>
+
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0284c7" flood-opacity="0.4" />
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect x="6" y="6" width="116" height="116" rx="28" fill="url(#bgGrad)" stroke="url(#borderGrad)" stroke-width="3" />
+
+  <!-- Subtle 3D Grid Accent -->
+  <path d="M 28 64 L 64 45 L 100 64 L 64 83 Z" fill="none" stroke="#38bdf8" stroke-width="1" stroke-dasharray="2 3" opacity="0.35" />
+
+  <!-- Isometric Module Cube (Mini Furniture Accent Top Right) -->
+  <g transform="translate(40, -10) scale(0.65)">
+    <!-- Top Face -->
+    <polygon points="64,28 84,39 64,50 44,39" fill="url(#cubeTop)" opacity="0.9" />
+    <!-- Left Face -->
+    <polygon points="44,39 64,50 64,72 44,61" fill="url(#cubeLeft)" opacity="0.85" />
+    <!-- Right Face -->
+    <polygon points="64,50 84,39 84,61 64,72" fill="url(#cubeRight)" opacity="0.9" />
+  </g>
+
+  <!-- Monogram МК -->
+  <g filter="url(#shadow)">
+    <!-- Letter М -->
+    <path d="M 26 88 L 26 40 L 36 40 L 48 64 L 60 40 L 70 40 L 70 88 L 60 88 L 60 56 L 51 74 L 45 74 L 36 56 L 36 88 Z" fill="url(#mkGrad)" />
+    
+    <!-- Letter К -->
+    <path d="M 76 88 L 76 40 L 86 40 L 86 61 L 98 40 L 110 40 L 95 64 L 112 88 L 99 88 L 86 69 L 86 88 Z" fill="url(#mkGrad)" />
+  </g>
+
+  <!-- Cyan Indicator Dot -->
+  <circle cx="106" cy="22" r="4.5" fill="#38bdf8" />
+  <circle cx="106" cy="22" r="2" fill="#ffffff" />
+</svg>

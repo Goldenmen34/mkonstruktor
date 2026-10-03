@@ -1,0 +1,876 @@
+{
+  "id": "proj_1791013657806_zwdv2",
+  "name": "Проект от тест проекта",
+  "createdAt": "2026-10-03T07:47:37.806Z",
+  "updatedAt": "2026-10-03T10:38:20.729Z",
+  "totalPrice": 184841,
+  "modulesCount": 10,
+  "data": {
+    "modules": [
+      {
+        "id": "mod_0xpsiee",
+        "category": "kitchen",
+        "subType": "base",
+        "name": "Тумба под мойку (1 распашная дверь)",
+        "dimensions": {
+          "width": 600,
+          "height": 860,
+          "depth": 600
+        },
+        "position": {
+          "x": 1098,
+          "y": 0,
+          "z": -1198
+        },
+        "rotation": 0,
+        "config": {
+          "doors": 1,
+          "drawers": 0,
+          "shelves": 0,
+          "hasCountertop": true,
+          "hasPlinth": true,
+          "hasBackWall": false,
+          "isOpen": false,
+          "handleType": "bar",
+          "golaType": "type1",
+          "isMirrored": true
+        },
+        "materials": {
+          "carcass": "mat_egger_ldsp_U522_ST9",
+          "facade": "mat_egger_facade_item_egger_________U630_ST9______________jpg",
+          "countertop": "countertop_concrete",
+          "handle": "#94A3B8"
+        },
+        "basePrice": 7900,
+        "catalogId": "k_base_sink_1door"
+      },
+      {
+        "id": "mod_056dhsr",
+        "category": "kitchen",
+        "subType": "base",
+        "name": "Тумба с 3 ящиками (1 малый + 2 глубоких)",
+        "dimensions": {
+          "width": 600,
+          "height": 860,
+          "depth": 600
+        },
+        "position": {
+          "x": -302,
+          "y": 0,
+          "z": -1198
+        },
+        "rotation": 0,
+        "config": {
+          "doors": 0,
+          "drawers": 3,
+          "shelves": 0,
+          "hasCountertop": true,
+          "hasPlinth": true,
+          "drawerLayout": "1small_2deep",
+          "golaType": "type1",
+          "isOpen": false,
+          "handleType": "bar"
+        },
+        "materials": {
+          "carcass": "mat_egger_ldsp_U522_ST9",
+          "facade": "mat_egger_facade_item_egger_________U630_ST9______________jpg",
+          "countertop": "countertop_concrete",
+          "handle": "#94A3B8"
+        },
+        "basePrice": 13500,
+        "catalogId": "k_base_3drawers"
+      },
+      {
+        "id": "mod_m8pfbs8",
+        "category": "kitchen",
+        "subType": "base",
+        "name": "Нижняя тумба (2 распашные двери)",
+        "dimensions": {
+          "width": 800,
+          "height": 860,
+          "depth": 600
+        },
+        "position": {
+          "x": 398,
+          "y": 0,
+          "z": -1198
+        },
+        "rotation": 0,
+        "config": {
+          "doors": 2,
+          "drawers": 0,
+          "shelves": 1,
+          "hasCountertop": true,
+          "hasPlinth": true,
+          "isOpen": false,
+          "handleType": "bar",
+          "golaType": "type1"
+        },
+        "materials": {
+          "carcass": "mat_egger_ldsp_U522_ST9",
+          "facade": "mat_egger_facade_item_egger_________U630_ST9______________jpg",
+          "countertop": "countertop_concrete",
+          "handle": "#94A3B8"
+        },
+        "basePrice": 8900,
+        "catalogId": "k_base_2doors"
+      },
+      {
+        "id": "mod_b6oz3jy",
+        "category": "kitchen",
+        "subType": "wall",
+        "name": "Шкаф с сушкой для посуды (1 дверь)",
+        "dimensions": {
+          "width": 600,
+          "height": 720,
+          "depth": 320
+        },
+        "position": {
+          "x": 1838,
+          "y": 1780,
+          "z": -828
+        },
+        "rotation": 270,
+        "config": {
+          "doors": 1,
+          "drawers": 0,
+          "shelves": 0,
+          "specialCabinetType": "drying",
+          "hasCountertop": false,
+          "hasPlinth": false,
+          "isOpen": false,
+          "handleType": "none",
+          "golaType": "type1"
+        },
+        "materials": {
+          "carcass": "mat_egger_ldsp_U522_ST9",
+          "facade": "mat_egger_facade_item_egger_________U630_ST9______________jpg",
+          "handle": "#94A3B8"
+        },
+        "basePrice": 9200,
+        "catalogId": "k_wall_drying_1door"
+      },
+      {
+        "id": "mod_lzuvbvz",
+        "category": "kitchen",
+        "subType": "wall",
+        "name": "Шкаф с подъемником Aventos HF (складной)",
+        "dimensions": {
+          "width": 800,
+          "height": 720,
+          "depth": 320
+        },
+        "position": {
+          "x": 948,
+          "y": 1780,
+          "z": -1338
+        },
+        "rotation": 0,
+        "config": {
+          "doors": 2,
+          "drawers": 0,
+          "shelves": 2,
+          "doorOpeningType": "aventos_hf",
+          "hasCountertop": false,
+          "hasPlinth": false,
+          "isOpen": false,
+          "handleType": "none",
+          "golaType": "type1"
+        },
+        "materials": {
+          "carcass": "mat_egger_ldsp_U522_ST9",
+          "facade": "mat_egger_facade_item_egger_________U630_ST9______________jpg",
+          "handle": "#94A3B8"
+        },
+        "basePrice": 16800,
+        "catalogId": "k_wall_aventos_hf"
+      },
+      {
+        "id": "mod_d10gnw6",
+        "category": "kitchen",
+        "subType": "top",
+        "name": "Антресоль глуб. подъемная (H 360)",
+        "dimensions": {
+          "width": 1000,
+          "height": 360,
+          "depth": 550
+        },
+        "position": {
+          "x": 48,
+          "y": 2140,
+          "z": -1223
+        },
+        "rotation": 0,
+        "config": {
+          "doors": 1,
+          "drawers": 0,
+          "shelves": 0,
+          "doorOpeningType": "lift",
+          "handleType": "none",
+          "hasCountertop": false,
+          "hasPlinth": false,
+          "isOpen": false,
+          "golaType": "type1"
+        },
+        "materials": {
+          "carcass": "mat_egger_ldsp_U522_ST9",
+          "facade": "mat_egger_facade_item_egger_________U630_ST9______________jpg",
+          "handle": "#94A3B8"
+        },
+        "basePrice": 7200,
+        "catalogId": "k_top_deep_lift_360"
+      },
+      {
+        "id": "mod_d6rdvs7",
+        "category": "kitchen",
+        "subType": "corner",
+        "name": "Угловая тумба приставная (Blind, левый угол)",
+        "dimensions": {
+          "width": 1000,
+          "height": 860,
+          "depth": 600
+        },
+        "position": {
+          "x": 1698,
+          "y": 0,
+          "z": -998
+        },
+        "rotation": 270,
+        "config": {
+          "doors": 1,
+          "drawers": 0,
+          "shelves": 1,
+          "hasCountertop": true,
+          "hasPlinth": true,
+          "blindCornerWidth": 600,
+          "blindCornerSide": "left",
+          "isOpen": false,
+          "handleType": "bar",
+          "golaType": "type1"
+        },
+        "materials": {
+          "carcass": "mat_egger_ldsp_U522_ST9",
+          "facade": "mat_egger_facade_item_egger_________U630_ST9______________jpg",
+          "countertop": "countertop_concrete",
+          "handle": "#94A3B8"
+        },
+        "basePrice": 14200,
+        "catalogId": "k_base_corner_blind"
+      },
+      {
+        "id": "mod_zf2swbw",
+        "category": "kitchen",
+        "subType": "wall",
+        "name": "Шкаф навесной приставной (Blind, правый угол)",
+        "dimensions": {
+          "width": 650,
+          "height": 1000,
+          "depth": 320
+        },
+        "position": {
+          "x": 1673,
+          "y": 1500,
+          "z": -1338
+        },
+        "rotation": 0,
+        "config": {
+          "doors": 1,
+          "drawers": 0,
+          "shelves": 2,
+          "blindCornerWidth": 320,
+          "blindCornerSide": "right",
+          "isMirrored": true,
+          "hasCountertop": false,
+          "hasPlinth": false,
+          "isOpen": false,
+          "handleType": "none",
+          "golaType": "type1"
+        },
+        "materials": {
+          "carcass": "mat_egger_ldsp_U522_ST9",
+          "facade": "mat_egger_facade_item_egger_________U630_ST9______________jpg",
+          "handle": "#94A3B8"
+        },
+        "basePrice": 10800,
+        "catalogId": "k_wall_corner_blind_right"
+      },
+      {
+        "id": "mod_46dhwak",
+        "category": "kitchen",
+        "subType": "base",
+        "code": "НС-ПММ-60",
+        "name": "НС-ПММ-60 · Посудомоечная 600 мм",
+        "dimensions": {
+          "width": 600,
+          "height": 860,
+          "depth": 600
+        },
+        "position": {
+          "x": 1698,
+          "y": 0,
+          "z": -198
+        },
+        "rotation": 270,
+        "config": {
+          "doors": 1,
+          "drawers": 0,
+          "shelves": 0,
+          "hasCountertop": true,
+          "hasPlinth": true,
+          "hasBackWall": false,
+          "isOpen": true,
+          "handleType": "bar",
+          "golaType": "type1"
+        },
+        "materials": {
+          "carcass": "mat_egger_ldsp_U522_ST9",
+          "facade": "mat_egger_facade_item_egger_________U630_ST9______________jpg",
+          "countertop": "countertop_concrete",
+          "handle": "#94A3B8"
+        },
+        "basePrice": 6500,
+        "catalogId": "k_base_dishwasher_600"
+      },
+      {
+        "id": "mod_efcg9f8",
+        "category": "kitchen",
+        "subType": "tall",
+        "code": "П-Д-ДШ-2В-2380",
+        "name": "П-Д-ДШ-2В · Под духовку (H 2380) (Копия)",
+        "dimensions": {
+          "width": 600,
+          "height": 2500,
+          "depth": 550
+        },
+        "position": {
+          "x": 1723,
+          "y": 0,
+          "z": 402
+        },
+        "rotation": 270,
+        "config": {
+          "doors": 0,
+          "drawers": 0,
+          "shelves": 4,
+          "specialTallType": "oven",
+          "hasCountertop": false,
+          "hasPlinth": true,
+          "isOpen": false,
+          "handleType": "bar",
+          "golaType": "type1",
+          "customParts": [
+            {
+              "id": "part_side_left_1791022528175_1",
+              "name": "Левая стойка (боковина)",
+              "category": "carcass",
+              "materialType": "ldsp",
+              "materialName": "ЛДСП 16 мм",
+              "color": "#DFD5C6",
+              "thickness": 16,
+              "widthBinding": "left_side",
+              "depthBinding": "full_depth",
+              "heightBinding": "full_height",
+              "offsetX": 0,
+              "offsetY": 0,
+              "offsetZ": 0,
+              "isVisible": true
+            },
+            {
+              "id": "part_side_right_1791022528175_2",
+              "name": "Правая стойка (боковина)",
+              "category": "carcass",
+              "materialType": "ldsp",
+              "materialName": "ЛДСП 16 мм",
+              "color": "#DFD5C6",
+              "thickness": 16,
+              "widthBinding": "right_side",
+              "depthBinding": "full_depth",
+              "heightBinding": "full_height",
+              "offsetX": 0,
+              "offsetY": 0,
+              "offsetZ": 0,
+              "isVisible": true
+            },
+            {
+              "id": "part_bottom_1791022528175_3",
+              "name": "Дно корпуса (горизонт нижний)",
+              "category": "carcass",
+              "materialType": "ldsp",
+              "materialName": "ЛДСП 16 мм",
+              "color": "#DFD5C6",
+              "thickness": 16,
+              "widthBinding": "between_sides",
+              "depthBinding": "full_depth",
+              "heightBinding": "bottom_pass",
+              "offsetX": 0,
+              "offsetY": 0,
+              "offsetZ": 0,
+              "isVisible": true
+            },
+            {
+              "id": "part_top_1791022528175_4",
+              "name": "Верхний горизонт (крышка)",
+              "category": "carcass",
+              "materialType": "ldsp",
+              "materialName": "ЛДСП 16 мм",
+              "color": "#DFD5C6",
+              "thickness": 16,
+              "widthBinding": "between_sides",
+              "depthBinding": "full_depth",
+              "heightBinding": "top_roof",
+              "offsetX": 0,
+              "offsetY": 0,
+              "offsetZ": 0,
+              "isVisible": true
+            },
+            {
+              "id": "part_back_1791022528175_5",
+              "name": "Задняя стенка (ХДФ 4 мм)",
+              "category": "back",
+              "materialType": "hdf",
+              "materialName": "ХДФ 4 мм (Белый)",
+              "color": "#F8FAFC",
+              "thickness": 4,
+              "widthBinding": "full_width",
+              "depthBinding": "back_wall",
+              "heightBinding": "full_height",
+              "offsetX": 0,
+              "offsetY": 0,
+              "offsetZ": 0,
+              "isVisible": true
+            },
+            {
+              "id": "part_drawer_front_1791022528175_1",
+              "name": "Фасад ящика нижний №1 (МДФ)",
+              "category": "carcass",
+              "materialType": "ldsp",
+              "materialName": "ЛДСП 16 мм (Базовый)",
+              "color": "#DFD5C6",
+              "thickness": 16,
+              "widthBinding": "custom",
+              "customWidth": 50,
+              "depthBinding": "facade",
+              "heightBinding": "custom",
+              "customHeight": 2400,
+              "offsetX": 326,
+              "offsetY": 0,
+              "offsetZ": -56,
+              "isVisible": true
+            },
+            {
+              "id": "part_shelf_oven_1791022528175_3",
+              "name": "Горизонт под духовой шкаф (ЛДСП)",
+              "category": "shelf",
+              "materialType": "ldsp",
+              "materialName": "ЛДСП 16 мм",
+              "color": "#DFD5C6",
+              "thickness": 16,
+              "widthBinding": "between_sides",
+              "depthBinding": "full_depth",
+              "heightBinding": "shelf",
+              "offsetX": 0,
+              "offsetY": -462,
+              "offsetZ": 0,
+              "isVisible": true
+            },
+            {
+              "id": "part_shelf_top_1791022528175_4",
+              "name": "Горизонт над духовкой (дно верхнего шкафа)",
+              "category": "shelf",
+              "materialType": "ldsp",
+              "materialName": "ЛДСП 16 мм",
+              "color": "#DFD5C6",
+              "thickness": 16,
+              "widthBinding": "between_sides",
+              "depthBinding": "full_depth",
+              "heightBinding": "shelf",
+              "offsetX": 0,
+              "offsetY": 149,
+              "offsetZ": 0,
+              "isVisible": true
+            },
+            {
+              "id": "part_shelf_upper_1791022528175_1",
+              "name": "Полка верхнего шкафа №1 (ЛДСП)",
+              "category": "shelf",
+              "materialType": "ldsp",
+              "materialName": "ЛДСП 16 мм",
+              "color": "#DFD5C6",
+              "thickness": 16,
+              "widthBinding": "between_sides",
+              "depthBinding": "recessed_front",
+              "heightBinding": "shelf",
+              "offsetX": 0,
+              "offsetY": 505,
+              "offsetZ": 0,
+              "isVisible": true
+            },
+            {
+              "id": "part_shelf_upper_1791022528175_2",
+              "name": "Полка верхнего шкафа №2 (ЛДСП)",
+              "category": "shelf",
+              "materialType": "ldsp",
+              "materialName": "ЛДСП 16 мм",
+              "color": "#DFD5C6",
+              "thickness": 16,
+              "widthBinding": "between_sides",
+              "depthBinding": "recessed_front",
+              "heightBinding": "shelf",
+              "offsetX": 0,
+              "offsetY": 838,
+              "offsetZ": 0,
+              "isVisible": true
+            }
+          ]
+        },
+        "materials": {
+          "carcass": "mat_egger_ldsp_U522_ST9",
+          "facade": "mat_egger_facade_item_egger_________U630_ST9______________jpg",
+          "handle": "#94A3B8"
+        },
+        "basePrice": 25200,
+        "catalogId": "k_tall_oven_2380"
+      }
+    ],
+    "projectSettings": {
+      "dspThickness": 16,
+      "baseBodyHeight": 760,
+      "baseBodyDepth": 510,
+      "plinthHeight": 100,
+      "hasPlinth": true,
+      "countertopThickness": 40,
+      "countertopFrontOverhang": 50,
+      "countertopBackOverhang": 40,
+      "countertopDepth": 600,
+      "apronHeight": 600,
+      "apronStartHeight": 900,
+      "upperBodyDepth": 320,
+      "upperBaseStartHeight": 1500,
+      "upperFacadeBottomOverhang": 0,
+      "defaultHandle": "hw_handle_gola"
+    },
+    "globalMaterials": {
+      "carcass": "mat_egger_ldsp_U522_ST9",
+      "facade": "mat_egger_facade_item_egger_________U630_ST9______________jpg",
+      "countertop": "countertop_concrete"
+    },
+    "roomData": {
+      "vertices": [
+        {
+          "id": "v0",
+          "x": -2000,
+          "z": -1500
+        },
+        {
+          "id": "v1",
+          "x": 2000,
+          "z": -1500
+        },
+        {
+          "id": "v2",
+          "x": 2000,
+          "z": 1500
+        },
+        {
+          "id": "v3",
+          "x": -2000,
+          "z": 1500
+        }
+      ],
+      "walls": [
+        {
+          "id": "w0",
+          "startVertexId": "v0",
+          "endVertexId": "v1",
+          "thickness": 100,
+          "height": 2700,
+          "name": "Стена 1 (Задняя)"
+        },
+        {
+          "id": "w1",
+          "startVertexId": "v1",
+          "endVertexId": "v2",
+          "thickness": 100,
+          "height": 2700,
+          "name": "Стена 2 (Правая)"
+        },
+        {
+          "id": "w2",
+          "startVertexId": "v2",
+          "endVertexId": "v3",
+          "thickness": 100,
+          "height": 2700,
+          "name": "Стена 3 (Передняя)"
+        },
+        {
+          "id": "w3",
+          "startVertexId": "v3",
+          "endVertexId": "v0",
+          "thickness": 100,
+          "height": 2700,
+          "name": "Стена 4 (Левая)"
+        }
+      ],
+      "columns": [],
+      "openings": [
+        {
+          "id": "open_window_2748",
+          "wallId": "w3",
+          "type": "window",
+          "name": "Окно 1200×1400",
+          "width": 1200,
+          "height": 1400,
+          "sillHeight": 850,
+          "offsetFromStart": 1500
+        }
+      ],
+      "utilities": [
+        {
+          "id": "util_radiator_9132",
+          "wallId": "w3",
+          "category": "gas_heating",
+          "subType": "radiator",
+          "name": "Радиатор отопления",
+          "width": 800,
+          "height": 500,
+          "depth": 100,
+          "offsetFromStart": 1500,
+          "elevationFromFloor": 150
+        },
+        {
+          "id": "util_gas_boiler_1528",
+          "wallId": "w3",
+          "category": "gas_heating",
+          "subType": "gas_boiler",
+          "name": "Газовый котёл",
+          "width": 400,
+          "height": 700,
+          "depth": 300,
+          "offsetFromStart": 390,
+          "elevationFromFloor": 1200
+        }
+      ],
+      "height": 2700,
+      "floorColor": "#C2A17E",
+      "wallColor": "#E2E8F0",
+      "template": "rectangular",
+      "selectedWallId": null,
+      "selectedVertexId": null,
+      "selectedColumnId": null,
+      "selectedOpeningId": null,
+      "selectedUtilityId": null,
+      "activeWallElevationId": null
+    },
+    "roomConfig": {
+      "walls": [],
+      "width": 4000,
+      "length": 3000,
+      "height": 2700,
+      "floorColor": "#C2A17E",
+      "wallColor": "#E2E8F0"
+    },
+    "customTemplates": [
+      {
+        "id": "custom_sec_1791022650767",
+        "category": "kitchen",
+        "subType": "tall",
+        "mainGroup": "tall",
+        "subGroup": "all",
+        "code": "П-Д-ДШ-2В-2380-МОД",
+        "name": "П-Д-ДШ-2В · Под духовку (H 2380) (Копия)",
+        "description": "Собственная сборка из 10 деталей",
+        "defaultDimensions": {
+          "width": 600,
+          "height": 2380,
+          "depth": 550
+        },
+        "allowedDimensions": {
+          "minWidth": 200,
+          "maxWidth": 1200,
+          "minHeight": 300,
+          "maxHeight": 2400,
+          "minDepth": 250,
+          "maxDepth": 800
+        },
+        "tags": [
+          "пользовательский",
+          "кастом",
+          "редактор",
+          "tall"
+        ],
+        "defaultConfig": {
+          "doors": 0,
+          "drawers": 1,
+          "shelves": 4,
+          "hasCountertop": false,
+          "hasPlinth": true,
+          "customParts": [
+            {
+              "id": "part_side_left_1791022528175_1",
+              "name": "Левая стойка (боковина)",
+              "category": "carcass",
+              "materialType": "ldsp",
+              "materialName": "ЛДСП 16 мм",
+              "color": "#DFD5C6",
+              "thickness": 16,
+              "widthBinding": "left_side",
+              "depthBinding": "full_depth",
+              "heightBinding": "full_height",
+              "offsetX": 0,
+              "offsetY": 0,
+              "offsetZ": 0,
+              "isVisible": true
+            },
+            {
+              "id": "part_side_right_1791022528175_2",
+              "name": "Правая стойка (боковина)",
+              "category": "carcass",
+              "materialType": "ldsp",
+              "materialName": "ЛДСП 16 мм",
+              "color": "#DFD5C6",
+              "thickness": 16,
+              "widthBinding": "right_side",
+              "depthBinding": "full_depth",
+              "heightBinding": "full_height",
+              "offsetX": 0,
+              "offsetY": 0,
+              "offsetZ": 0,
+              "isVisible": true
+            },
+            {
+              "id": "part_bottom_1791022528175_3",
+              "name": "Дно корпуса (горизонт нижний)",
+              "category": "carcass",
+              "materialType": "ldsp",
+              "materialName": "ЛДСП 16 мм",
+              "color": "#DFD5C6",
+              "thickness": 16,
+              "widthBinding": "between_sides",
+              "depthBinding": "full_depth",
+              "heightBinding": "bottom_pass",
+              "offsetX": 0,
+              "offsetY": 0,
+              "offsetZ": 0,
+              "isVisible": true
+            },
+            {
+              "id": "part_top_1791022528175_4",
+              "name": "Верхний горизонт (крышка)",
+              "category": "carcass",
+              "materialType": "ldsp",
+              "materialName": "ЛДСП 16 мм",
+              "color": "#DFD5C6",
+              "thickness": 16,
+              "widthBinding": "between_sides",
+              "depthBinding": "full_depth",
+              "heightBinding": "top_roof",
+              "offsetX": 0,
+              "offsetY": 0,
+              "offsetZ": 0,
+              "isVisible": true
+            },
+            {
+              "id": "part_back_1791022528175_5",
+              "name": "Задняя стенка (ХДФ 4 мм)",
+              "category": "back",
+              "materialType": "hdf",
+              "materialName": "ХДФ 4 мм (Белый)",
+              "color": "#F8FAFC",
+              "thickness": 4,
+              "widthBinding": "full_width",
+              "depthBinding": "back_wall",
+              "heightBinding": "full_height",
+              "offsetX": 0,
+              "offsetY": 0,
+              "offsetZ": 0,
+              "isVisible": true
+            },
+            {
+              "id": "part_drawer_front_1791022528175_1",
+              "name": "Фасад ящика нижний №1 (МДФ)",
+              "category": "drawer",
+              "materialType": "mdf_facade",
+              "materialName": "МДФ фасад 18 мм",
+              "color": "#D29B5D",
+              "thickness": 18,
+              "widthBinding": "custom",
+              "customWidth": 50,
+              "depthBinding": "facade",
+              "heightBinding": "custom",
+              "customHeight": 2380,
+              "offsetX": 326,
+              "offsetY": 0,
+              "offsetZ": -56,
+              "isVisible": true
+            },
+            {
+              "id": "part_shelf_oven_1791022528175_3",
+              "name": "Горизонт под духовой шкаф (ЛДСП)",
+              "category": "shelf",
+              "materialType": "ldsp",
+              "materialName": "ЛДСП 16 мм",
+              "color": "#DFD5C6",
+              "thickness": 16,
+              "widthBinding": "between_sides",
+              "depthBinding": "full_depth",
+              "heightBinding": "shelf",
+              "offsetX": 0,
+              "offsetY": -462,
+              "offsetZ": 0,
+              "isVisible": true
+            },
+            {
+              "id": "part_shelf_top_1791022528175_4",
+              "name": "Горизонт над духовкой (дно верхнего шкафа)",
+              "category": "shelf",
+              "materialType": "ldsp",
+              "materialName": "ЛДСП 16 мм",
+              "color": "#DFD5C6",
+              "thickness": 16,
+              "widthBinding": "between_sides",
+              "depthBinding": "full_depth",
+              "heightBinding": "shelf",
+              "offsetX": 0,
+              "offsetY": 149,
+              "offsetZ": 0,
+              "isVisible": true
+            },
+            {
+              "id": "part_shelf_upper_1791022528175_1",
+              "name": "Полка верхнего шкафа №1 (ЛДСП)",
+              "category": "shelf",
+              "materialType": "ldsp",
+              "materialName": "ЛДСП 16 мм",
+              "color": "#DFD5C6",
+              "thickness": 16,
+              "widthBinding": "between_sides",
+              "depthBinding": "recessed_front",
+              "heightBinding": "shelf",
+              "offsetX": 0,
+              "offsetY": 505,
+              "offsetZ": 0,
+              "isVisible": true
+            },
+            {
+              "id": "part_shelf_upper_1791022528175_2",
+              "name": "Полка верхнего шкафа №2 (ЛДСП)",
+              "category": "shelf",
+              "materialType": "ldsp",
+              "materialName": "ЛДСП 16 мм",
+              "color": "#DFD5C6",
+              "thickness": 16,
+              "widthBinding": "between_sides",
+              "depthBinding": "recessed_front",
+              "heightBinding": "shelf",
+              "offsetX": 0,
+              "offsetY": 838,
+              "offsetZ": 0,
+              "isVisible": true
+            }
+          ]
+        },
+        "basePrice": 13000
+      }
+    ]
+  }
+}
