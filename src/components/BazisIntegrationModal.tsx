@@ -117,7 +117,7 @@ export const BazisIntegrationModal: React.FC = () => {
   // Добавить импортированный модуль на 3D сцену
   const handleAddToScene = () => {
     if (!importResult?.template) return;
-    const added = addModule(importResult.template);
+    const added = addModule(importResult.template, undefined, importResult.dimensions);
     if (added) {
       setImportNotification(`Секция «${importResult.modelName}» успешно добавлена на сцену!`);
       setTimeout(() => setImportNotification(null), 3500);

@@ -303,13 +303,14 @@ export const usePlannerStore = create<PlannerState>()(
         dimDepth = projectSettings.upperBodyDepth ?? template.defaultDimensions.depth ?? 320;
       }
     } else {
+      const isCustomOrBazis = Boolean(template.id?.startsWith('bazis_')) || Boolean(template.defaultConfig?.customParts?.length);
       if (!customDimensions?.height) {
-        if (template.subType === 'base' || template.subType === 'corner') {
+        if (!isCustomOrBazis && (template.subType === 'base' || template.subType === 'corner')) {
           dimHeight = projectSettings.baseBodyHeight + (projectSettings.hasPlinth ? projectSettings.plinthHeight : 0);
         }
       }
       if (!customDimensions?.depth) {
-        if (template.subType === 'base' || template.subType === 'corner') {
+        if (!isCustomOrBazis && (template.subType === 'base' || template.subType === 'corner')) {
           dimDepth = projectSettings.countertopDepth;
         }
       }
@@ -485,8 +486,12 @@ export const usePlannerStore = create<PlannerState>()(
     }
 
     const isBase = !isWall && !isTall && !isTop && (template.mainGroup === 'base' || template.subType === 'base' || template.subType === 'corner');
-    const plinthActive = (isTall || isBase) ? (template.defaultConfig.hasPlinth ?? true) : false;
-    const countertopActive = isBase ? (template.defaultConfig.hasCountertop ?? true) : false;
+    const plinthActive = template.defaultConfig.hasPlinth !== undefined
+      ? template.defaultConfig.hasPlinth
+      : ((isTall || isBase) ? true : false);
+    const countertopActive = template.defaultConfig.hasCountertop !== undefined
+      ? template.defaultConfig.hasCountertop
+      : (isBase ? true : false);
 
     const newModule: FurnitureModule = {
       id: 'mod_' + Math.random().toString(36).substring(2, 9),
@@ -696,8 +701,8 @@ export const usePlannerStore = create<PlannerState>()(
       ...newTemplate,
       defaultConfig: {
         ...newTemplate.defaultConfig,
-        hasCountertop: isBase,
-        hasPlinth: isBase || isTall,
+        hasCountertop: newTemplate.defaultConfig?.hasCountertop ?? isBase,
+        hasPlinth: newTemplate.defaultConfig?.hasPlinth ?? (isBase || isTall),
       },
     };
     set((state) => {

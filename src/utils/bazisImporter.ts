@@ -15,6 +15,8 @@
 
 import * as fflate from 'fflate';
 import { CatalogItemTemplate } from '../data/catalog';
+import { convertTemplateToCustomParts } from './sectionEditorEngine';
+import { DEFAULT_PROJECT_SETTINGS, ModuleConfig } from '../types';
 
 export interface ParsedBazisPart {
   name: string;
@@ -227,57 +229,138 @@ export async function parseBazisB3D(file: File | ArrayBuffer, fileName: string =
     }
 
     // 5. Определение габаритов
-    // Ищем характерные мебельные размеры (Ширина, Глубина, Высота)
-    let detectedWidth = 600;
-    let detectedHeight = 720;
-    let detectedDepth = 560;
-
-    // Сканируем числа из decompressedChunks
-    const candidateFloats: number[] = [];
-    for (const chunk of decompressedChunks) {
-      for (let i = 0; i < chunk.length - 4; i += 4) {
-        try {
-          const f = new DataView(chunk.buffer, chunk.byteOffset + i, 4).getFloat32(0, true);
-          if (f >= 100 && f <= 2800 && Number.isFinite(f) && Math.abs(f - Math.round(f)) < 0.1) {
-            candidateFloats.push(Math.round(f));
-          }
-        } catch (e) {}
-      }
-    }
-
-    // Умный поиск стандартных габаритов
-    const widths = candidateFloats.filter((n) => n >= 300 && n <= 1200 && n % 50 === 0);
-    const depths = candidateFloats.filter((n) => n >= 300 && n <= 600);
-    const heights = candidateFloats.filter((n) => (n >= 700 && n <= 920) || (n >= 1900 && n <= 2400));
-
-    if (widths.length > 0) detectedWidth = widths[0];
-    if (depths.length > 0) detectedDepth = depths[0];
-    if (heights.length > 0) detectedHeight = heights[0];
-
     // Очищенное имя модели
     const cleanModelName = fileName
       .replace(/\.b3d$/i, '')
       .replace(/\.fr3$/i, '')
       .trim();
 
+    const lowerName = cleanModelName.toLowerCase();
+    const isBathroom = lowerName.includes('ванн') || lowerName.includes('тумб') || lowerName.includes('умывальн') || lowerName.includes('раковин');
+    const isWardrobe = lowerName.includes('шкаф') || lowerName.includes('купе') || lowerName.includes('гардероб');
+    const isTallInitial = lowerName.includes('пенал') || lowerName.includes('колон');
+    const isWallInitial = lowerName.includes('верх') || lowerName.includes('навесн');
+
+    // Сканируем числа Float32 и Float64 из decompressedChunks
+    const foundWidths: number[] = [];
+    const foundHeights: number[] = [];
+    const foundDepths: number[] = [];
+    const candidateFloats: number[] = [];
+
+    for (const chunk of decompressedChunks) {
+      const dv = new DataView(chunk.buffer, chunk.byteOffset, chunk.byteLength);
+
+      // 1. Поиск панелей-якорей ('бок' и 'фасад') в UTF-16LE для точных габаритов
+      for (let i = 0; i <= chunk.length - 120; i += 2) {
+        // 'бок' (0x0431, 0x043e, 0x043a)
+        if (chunk[i] === 0x31 && chunk[i + 1] === 0x04 && chunk[i + 2] === 0x3e && chunk[i + 3] === 0x04 && chunk[i + 4] === 0x3a && chunk[i + 5] === 0x04) {
+          for (let k = Math.max(0, i - 120); k < i + 120; k++) {
+            const val = dv.getFloat64(k, true);
+            if (Number.isFinite(val) && val >= 100 && val <= 2500) {
+              const r = Math.round(val);
+              if (r >= 350 && r <= 2400) foundHeights.push(r);
+              if (r >= 250 && r <= 750) foundDepths.push(r);
+            }
+          }
+        }
+
+        // 'фасад' (0x0444, 0x0430, 0x0441, 0x0430, 0x0434)
+        if (chunk[i] === 0x44 && chunk[i + 1] === 0x04 && chunk[i + 2] === 0x30 && chunk[i + 3] === 0x04 && chunk[i + 4] === 0x41 && chunk[i + 5] === 0x04) {
+          for (let k = Math.max(0, i - 120); k < i + 120; k++) {
+            const val = dv.getFloat64(k, true);
+            if (Number.isFinite(val) && val >= 250 && val <= 2400) {
+              const r = Math.round(val);
+              foundWidths.push(r);
+            }
+          }
+        }
+      }
+
+      // 2. Общее сканирование Float32 и Float64
+      for (let i = 0; i <= chunk.length - 4; i += 4) {
+        try {
+          const f = dv.getFloat32(i, true);
+          if (f >= 100 && f <= 2800 && Number.isFinite(f) && Math.abs(f - Math.round(f)) < 0.1) {
+            candidateFloats.push(Math.round(f));
+          }
+        } catch (e) {}
+      }
+      for (let i = 0; i <= chunk.length - 8; i += 2) {
+        try {
+          const d = dv.getFloat64(i, true);
+          if (d >= 100 && d <= 2800 && Number.isFinite(d) && Math.abs(d - Math.round(d)) < 0.1) {
+            candidateFloats.push(Math.round(d));
+          }
+        } catch (e) {}
+      }
+    }
+
+    const freqMap: Record<number, number> = {};
+    for (const n of candidateFloats) {
+      const isPow2 = (n & (n - 1)) === 0 && n >= 256;
+      if (!isPow2) {
+        freqMap[n] = (freqMap[n] || 0) + 1;
+      }
+    }
+
+    const topFrequent = (arr: number[], fallback: number): number => {
+      if (!arr.length) return fallback;
+      const counts: Record<number, number> = {};
+      arr.forEach((x) => (counts[x] = (counts[x] || 0) + 1));
+      return Number(Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]);
+    };
+
+    const getBestInRange = (min: number, max: number, fallback: number): number => {
+      const candidates = Object.keys(freqMap)
+        .map(Number)
+        .filter((n) => n >= min && n <= max)
+        .sort((a, b) => {
+          let scoreA = freqMap[a] || 0;
+          let scoreB = freqMap[b] || 0;
+          if (a % 10 === 0) scoreA += 10;
+          if (b % 10 === 0) scoreB += 10;
+          return scoreB - scoreA;
+        });
+      return candidates[0] || fallback;
+    };
+
+    // Определение габаритов
+    let detectedWidth = foundWidths.length > 0 ? Math.max(...foundWidths) : getBestInRange(300, 1600, 600);
+    if (detectedWidth > 830 && detectedWidth < 850) detectedWidth = 840;
+
+    const detectedHeight = isTallInitial
+      ? getBestInRange(1800, 2600, 2040)
+      : (isWallInitial ? getBestInRange(350, 960, 720) : topFrequent(foundHeights, getBestInRange(450, 950, 720)));
+
+    const detectedDepth = topFrequent(foundDepths, getBestInRange(280, 650, 560));
+
     // 6. Определение типа секции (подтип)
     let subType: ParsedBazisResult['subType'] = 'base';
-    const lowerName = cleanModelName.toLowerCase();
-    if (lowerName.includes('верх') || lowerName.includes('навесн') || detectedHeight <= 500) {
+    if (isWallInitial || detectedHeight <= 500) {
       subType = 'wall';
-      detectedHeight = detectedHeight || 720;
-      detectedDepth = Math.min(detectedDepth, 350);
-    } else if (lowerName.includes('пенал') || lowerName.includes('колон') || detectedHeight >= 1800) {
+    } else if (isTallInitial || detectedHeight >= 1800) {
       subType = 'tall';
-      detectedHeight = Math.max(detectedHeight, 2040);
-    } else if (lowerName.includes('шкаф') || lowerName.includes('купе')) {
+    } else if (isWardrobe) {
       subType = 'wardrobe_swing';
     } else if (lowerName.includes('угол') || lowerName.includes('углов')) {
       subType = 'corner';
     }
 
-    const templateId = 'bazis_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    // Профиль Gola и ручки
+    const isGola = parts.some((p) => p.name.toLowerCase().includes('gola') || p.name.toLowerCase().includes('гола')) ||
+                   hardwareList.some((h) => h.name.toLowerCase().includes('gola') || h.name.toLowerCase().includes('гола'));
+    const detectedHandleType: ModuleConfig['handleType'] = isGola
+      ? 'gola'
+      : (hasDoors || hasDrawers ? 'bar' : 'none');
 
+    // Проверка наличия цоколя и столешницы
+    const hasPlinthInParts = parts.some((p) => p.name.toLowerCase().includes('цокол') || p.name.toLowerCase().includes('ножк') || p.name.toLowerCase().includes('опор'));
+    const hasCountertopInParts = parts.some((p) => p.name.toLowerCase().includes('столешниц') || p.name.toLowerCase().includes('постформинг') || p.name.toLowerCase().includes('hpl'));
+
+    const hasPlinth = hasPlinthInParts || (!isBathroom && !isWardrobe && subType === 'base');
+    const hasCountertop = hasCountertopInParts || (!isBathroom && !isWardrobe && subType === 'base');
+
+    const templateId = 'bazis_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
     const mainGroup = subType === 'wall' ? 'wall' : subType === 'tall' ? 'tall' : 'base';
     const subGroup = hasDrawers ? 'drawers' : 'doors';
 
@@ -286,7 +369,7 @@ export async function parseBazisB3D(file: File | ArrayBuffer, fileName: string =
       id: templateId,
       name: cleanModelName,
       code: `БМ-${detectedWidth}`,
-      category: subType.startsWith('wardrobe') ? 'wardrobe' : 'kitchen',
+      category: isWardrobe ? 'wardrobe' : 'kitchen',
       subType: subType,
       mainGroup,
       subGroup,
@@ -306,15 +389,34 @@ export async function parseBazisB3D(file: File | ArrayBuffer, fileName: string =
       defaultConfig: {
         doors: hasDoors ? Math.max(1, detectedDoorsCount || 1) : 0,
         drawers: hasDrawers ? Math.max(1, detectedDrawersCount || 2) : 0,
-        shelves: parts.filter((p) => p.category === 'shelf').length || 1,
-        hasCountertop: subType === 'base',
-        hasPlinth: subType === 'base',
+        shelves: parts.filter((p) => p.category === 'shelf').length || 0,
+        hasCountertop,
+        hasPlinth,
         hasBackWall: true,
-        handleType: 'bar',
+        handleType: detectedHandleType,
+        golaType: 'type1',
       },
       basePrice: Math.round(detectedWidth * 18 + detectedHeight * 8),
       description: `Импортировано из Базис-Мебельщик (${fileName}). Материалы: ${detectedLdspName}, ${detectedFacadeName}.`,
     };
+
+    // Генерируем параметрические детали customParts для точного рендеринга на сцене
+    const generatedParts = convertTemplateToCustomParts(
+      template,
+      DEFAULT_PROJECT_SETTINGS,
+      { width: detectedWidth, height: detectedHeight, depth: detectedDepth }
+    );
+
+    // Привязываем распознанные материалы Базиса к деталям
+    template.defaultConfig.customParts = generatedParts.map((p) => {
+      if (p.materialType === 'ldsp' && detectedLdspName) {
+        return { ...p, materialName: detectedLdspName };
+      }
+      if ((p.materialType === 'mdf' || p.materialType === 'mdf_facade') && detectedFacadeName) {
+        return { ...p, materialName: detectedFacadeName };
+      }
+      return p;
+    });
 
     return {
       success: true,
