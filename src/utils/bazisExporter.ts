@@ -8,7 +8,8 @@
  * 2. Генерация детальной спецификации для «Базис-Раскрой» (.csv).
  */
 
-import { FurnitureModule, RoomConfig } from '../types';
+import { FurnitureModule, RoomConfig, ProjectSettings, DEFAULT_PROJECT_SETTINGS } from '../types';
+import { evaluatePartGeometry } from './sectionEditorEngine';
 
 export interface BazisExportOptions {
   // Толщина плитных материалов
@@ -31,6 +32,7 @@ export interface BazisExportOptions {
   includePlinth: boolean; // Включать цоколь
   includeDrawersBoxes: boolean; // Строить внутренние короба ящиков
   clearSceneFirst: boolean; // Очищать модель в Базисе перед построением
+  settings?: ProjectSettings; // Глобальные инженерные параметры проекта
 }
 
 export const DEFAULT_BAZIS_OPTIONS: BazisExportOptions = {
@@ -193,114 +195,177 @@ function finishCabinetBlock() {
     code += `  var blockName = "${modNum}. ${mod.code ? mod.code + ' ' : ''}${mod.name} [${w}x${h}x${d}]";\n`;
     code += `  var blk = startCabinetBlock(blockName);\n\n`;
 
-    // 1. Левая боковина
-    code += `  // Боковина левая\n`;
-    code += `  var pLeft = createPanel(${d}, ${carcassH}, ldspThick, "Боковина левая", matCarcass);\n`;
-    code += `  setPos(pLeft, 0, ${plinthH}, 0);\n`;
-    code += `  if (pLeft && pLeft.Orient) pLeft.Orient(1); // вертикальная ориентация Z-Y\n\n`;
+    const customParts = mod.config.customParts;
+    if (customParts && customParts.length > 0) {
+      code += `  // --- Конструкция из Редактора Секций (${customParts.length} дет.) ---\n`;
+      const settings = opt.settings ?? DEFAULT_PROJECT_SETTINGS;
 
-    // 2. Правая боковина
-    code += `  // Боковина правая\n`;
-    code += `  var pRight = createPanel(${d}, ${carcassH}, ldspThick, "Боковина правая", matCarcass);\n`;
-    code += `  setPos(pRight, ${w - opt.ldspThickness}, ${plinthH}, 0);\n`;
-    code += `  if (pRight && pRight.Orient) pRight.Orient(1);\n\n`;
+      customParts.forEach((part, pIdx) => {
+        if (part.isVisible === false) return;
+        const geom = evaluatePartGeometry(
+          part,
+          { width: w, height: carcassH, depth: d },
+          settings,
+          customParts
+        );
 
-    // 3. Дно
-    const bottomW = w - 2 * opt.ldspThickness;
-    code += `  // Дно секции\n`;
-    code += `  var pBottom = createPanel(${bottomW}, ${d}, ldspThick, "Дно", matCarcass);\n`;
-    code += `  setPos(pBottom, ${opt.ldspThickness}, ${plinthH}, 0);\n\n`;
+        const pName = part.name || `Деталь ${pIdx + 1}`;
+        const pThick = Math.round(geom.thickness);
+        let matVar = 'matCarcass';
+        if (part.materialType === 'mdf_facade' || part.category === 'facade' || part.category === 'drawer') {
+          matVar = 'matFacade';
+        } else if (part.materialType === 'hdf' || part.category === 'back') {
+          matVar = 'matHdf';
+        } else if (part.materialType === 'countertop') {
+          matVar = 'matTabletop';
+        }
 
-    // 4. Крыша или Царги
-    if (isBase) {
-      // Царги для нижних модулей (передняя и задняя стяжные планки)
-      code += `  // Царга передняя (стяжная планка)\n`;
-      code += `  var pStrut1 = createPanel(${bottomW}, 80, ldspThick, "Царга передняя", matCarcass);\n`;
-      code += `  setPos(pStrut1, ${opt.ldspThickness}, ${plinthH + carcassH - opt.ldspThickness}, 0);\n\n`;
+        const localX = Math.round(w / 2 + geom.posX - geom.width / 2);
+        const localY = Math.round(plinthH + carcassH / 2 + geom.posY - geom.height / 2);
+        const localZ = Math.round(d / 2 - geom.posZ - geom.depth / 2);
 
-      code += `  // Царга задняя (стяжная планка)\n`;
-      code += `  var pStrut2 = createPanel(${bottomW}, 80, ldspThick, "Царга задняя", matCarcass);\n`;
-      code += `  setPos(pStrut2, ${opt.ldspThickness}, ${plinthH + carcassH - opt.ldspThickness}, ${d - 80});\n\n`;
-    } else {
-      // Полноценная крыша для верхних шкафов, пеналов и гардеробов
-      code += `  // Крыша (верхний горизонт)\n`;
-      code += `  var pTop = createPanel(${bottomW}, ${d}, ldspThick, "Крыша", matCarcass);\n`;
-      code += `  setPos(pTop, ${opt.ldspThickness}, ${plinthH + carcassH - opt.ldspThickness}, 0);\n\n`;
-    }
+        if (geom.width <= pThick + 2) {
+          // Вертикальная стойка / перегородка / боковина в плоскости Y-Z
+          code += `  // ${pName} (${Math.round(geom.depth)}x${Math.round(geom.height)}x${pThick} мм)\n`;
+          code += `  var pCustom${pIdx + 1} = createPanel(${Math.round(geom.depth)}, ${Math.round(geom.height)}, ${pThick}, "${pName}", ${matVar});\n`;
+          code += `  setPos(pCustom${pIdx + 1}, ${localX}, ${localY}, ${localZ});\n`;
+          code += `  if (pCustom${pIdx + 1} && pCustom${pIdx + 1}.Orient) pCustom${pIdx + 1}.Orient(1);\n\n`;
+        } else if (geom.height <= pThick + 2) {
+          // Горизонтальная панель (полка, дно, крышка, царга) в плоскости X-Z
+          code += `  // ${pName} (${Math.round(geom.width)}x${Math.round(geom.depth)}x${pThick} мм)\n`;
+          code += `  var pCustom${pIdx + 1} = createPanel(${Math.round(geom.width)}, ${Math.round(geom.depth)}, ${pThick}, "${pName}", ${matVar});\n`;
+          code += `  setPos(pCustom${pIdx + 1}, ${localX}, ${localY}, ${localZ});\n\n`;
+        } else {
+          // Фронтальная панель (фасад, планка, задняя стенка) в плоскости X-Y
+          code += `  // ${pName} (${Math.round(geom.width)}x${Math.round(geom.height)}x${pThick} мм)\n`;
+          code += `  var pCustom${pIdx + 1} = createPanel(${Math.round(geom.width)}, ${Math.round(geom.height)}, ${pThick}, "${pName}", ${matVar});\n`;
+          code += `  setPos(pCustom${pIdx + 1}, ${localX}, ${localY}, ${localZ});\n\n`;
+        }
+      });
 
-    // 5. Полки
-    if (shelves > 0) {
-      code += `  // Съемные / вкладные полки (${shelves} шт.)\n`;
-      const step = Math.round(carcassH / (shelves + 1));
-      for (let s = 1; s <= shelves; s++) {
-        const shelfY = plinthH + s * step;
-        const shelfD = d - opt.shelfInset;
-        code += `  var pShelf${s} = createPanel(${bottomW - 2}, ${shelfD}, ldspThick, "Полка ${s}", matCarcass);\n`;
-        code += `  setPos(pShelf${s}, ${opt.ldspThickness + 1}, ${shelfY}, 0);\n`;
+      // Цоколь (если включен)
+      if (hasPlinth && opt.includePlinth) {
+        code += `  // Цокольная планка\n`;
+        code += `  var pPlinth = createPanel(${w}, ${plinthH}, ldspThick, "Цоколь", matPlinth);\n`;
+        code += `  setPos(pPlinth, 0, 0, 30);\n\n`;
       }
-      code += `\n`;
-    }
 
-    // 6. Задняя стенка (ХДФ 4 мм)
-    if (mod.config.hasBackWall !== false) {
-      code += `  // Задняя стенка (ХДФ 4 мм)\n`;
-      code += `  var pBack = createPanel(${w - 4}, ${carcassH - 4}, hdfThick, "Задняя стенка ХДФ", matHdf);\n`;
-      code += `  setPos(pBack, 2, ${plinthH + 2}, ${d - opt.backWallThickness});\n\n`;
-    }
+      // Столешница (если включена)
+      if (isBase && opt.includeCountertop && mod.config.hasCountertop !== false) {
+        const topDepth = d + 40;
+        code += `  // Столешница со свесом 40 мм\n`;
+        code += `  var pTabletop = createPanel(${w}, ${topDepth}, tabletopThick, "Столешница", matTabletop);\n`;
+        code += `  setPos(pTabletop, 0, ${plinthH + carcassH}, -40);\n\n`;
+      }
+    } else {
+      // 1. Левая боковина
+      code += `  // Боковина левая\n`;
+      code += `  var pLeft = createPanel(${d}, ${carcassH}, ldspThick, "Боковина левая", matCarcass);\n`;
+      code += `  setPos(pLeft, 0, ${plinthH}, 0);\n`;
+      code += `  if (pLeft && pLeft.Orient) pLeft.Orient(1); // вертикальная ориентация Z-Y\n\n`;
 
-    // 7. Фасады
-    if (drawers > 0) {
-      code += `  // Выдвижные ящики и накладки (${drawers} шт.)\n`;
-      const drawerHeight = Math.round((carcassH - (drawers + 1) * opt.facadeGap) / drawers);
-      const drawerW = Math.round(w - 2 * opt.facadeGap);
+      // 2. Правая боковина
+      code += `  // Боковина правая\n`;
+      code += `  var pRight = createPanel(${d}, ${carcassH}, ldspThick, "Боковина правая", matCarcass);\n`;
+      code += `  setPos(pRight, ${w - opt.ldspThickness}, ${plinthH}, 0);\n`;
+      code += `  if (pRight && pRight.Orient) pRight.Orient(1);\n\n`;
 
-      for (let dr = 0; dr < drawers; dr++) {
-        const drY = Math.round(plinthH + opt.facadeGap + dr * (drawerHeight + opt.facadeGap));
-        code += `  // Накладка ящика ${dr + 1}\n`;
-        code += `  var pDrawerFacade${dr + 1} = createPanel(${drawerW}, ${drawerHeight}, facadeThick, "Фасад ящика ${dr + 1}", matFacade);\n`;
-        code += `  setPos(pDrawerFacade${dr + 1}, ${opt.facadeGap}, ${drY}, -facadeThick);\n`;
+      // 3. Дно
+      const bottomW = w - 2 * opt.ldspThickness;
+      code += `  // Дно секции\n`;
+      code += `  var pBottom = createPanel(${bottomW}, ${d}, ldspThick, "Дно", matCarcass);\n`;
+      code += `  setPos(pBottom, ${opt.ldspThickness}, ${plinthH}, 0);\n\n`;
 
-        if (opt.includeDrawersBoxes) {
-          const boxD = d - 50;
-          const boxH = Math.min(drawerHeight - 40, 160);
-          const boxInnerW = bottomW - 26; // 13мм зазор на направляющие с каждой стороны
-          code += `  // Короб ящика ${dr + 1}\n`;
-          code += `  var pBoxSideL${dr + 1} = createPanel(${boxD}, ${boxH}, ldspThick, "Боковина ящика L ${dr + 1}", matCarcass);\n`;
-          code += `  setPos(pBoxSideL${dr + 1}, ${opt.ldspThickness + 13}, ${drY + 20}, 20);\n`;
-          code += `  var pBoxSideR${dr + 1} = createPanel(${boxD}, ${boxH}, ldspThick, "Боковина ящика R ${dr + 1}", matCarcass);\n`;
-          code += `  setPos(pBoxSideR${dr + 1}, ${w - opt.ldspThickness - 13 - opt.ldspThickness}, ${drY + 20}, 20);\n`;
+      // 4. Крыша или Царги
+      if (isBase) {
+        // Царги для нижних модулей (передняя и задняя стяжные планки)
+        code += `  // Царга передняя (стяжная планка)\n`;
+        code += `  var pStrut1 = createPanel(${bottomW}, 80, ldspThick, "Царга передняя", matCarcass);\n`;
+        code += `  setPos(pStrut1, ${opt.ldspThickness}, ${plinthH + carcassH - opt.ldspThickness}, 0);\n\n`;
+
+        code += `  // Царга задняя (стяжная планка)\n`;
+        code += `  var pStrut2 = createPanel(${bottomW}, 80, ldspThick, "Царга задняя", matCarcass);\n`;
+        code += `  setPos(pStrut2, ${opt.ldspThickness}, ${plinthH + carcassH - opt.ldspThickness}, ${d - 80});\n\n`;
+      } else {
+        // Полноценная крыша для верхних шкафов, пеналов и гардеробов
+        code += `  // Крыша (верхний горизонт)\n`;
+        code += `  var pTop = createPanel(${bottomW}, ${d}, ldspThick, "Крыша", matCarcass);\n`;
+        code += `  setPos(pTop, ${opt.ldspThickness}, ${plinthH + carcassH - opt.ldspThickness}, 0);\n\n`;
+      }
+
+      // 5. Полки
+      if (shelves > 0) {
+        code += `  // Съемные / вкладные полки (${shelves} шт.)\n`;
+        const step = Math.round(carcassH / (shelves + 1));
+        for (let s = 1; s <= shelves; s++) {
+          const shelfY = plinthH + s * step;
+          const shelfD = d - opt.shelfInset;
+          code += `  var pShelf${s} = createPanel(${bottomW - 2}, ${shelfD}, ldspThick, "Полка ${s}", matCarcass);\n`;
+          code += `  setPos(pShelf${s}, ${opt.ldspThickness + 1}, ${shelfY}, 0);\n`;
+        }
+        code += `\n`;
+      }
+
+      // 6. Задняя стенка (ХДФ 4 мм)
+      if (mod.config.hasBackWall !== false) {
+        code += `  // Задняя стенка (ХДФ 4 мм)\n`;
+        code += `  var pBack = createPanel(${w - 4}, ${carcassH - 4}, hdfThick, "Задняя стенка ХДФ", matHdf);\n`;
+        code += `  setPos(pBack, 2, ${plinthH + 2}, ${d - opt.backWallThickness});\n\n`;
+      }
+
+      // 7. Фасады
+      if (drawers > 0) {
+        code += `  // Выдвижные ящики и накладки (${drawers} шт.)\n`;
+        const drawerHeight = Math.round((carcassH - (drawers + 1) * opt.facadeGap) / drawers);
+        const drawerW = Math.round(w - 2 * opt.facadeGap);
+
+        for (let dr = 0; dr < drawers; dr++) {
+          const drY = Math.round(plinthH + opt.facadeGap + dr * (drawerHeight + opt.facadeGap));
+          code += `  // Накладка ящика ${dr + 1}\n`;
+          code += `  var pDrawerFacade${dr + 1} = createPanel(${drawerW}, ${drawerHeight}, facadeThick, "Фасад ящика ${dr + 1}", matFacade);\n`;
+          code += `  setPos(pDrawerFacade${dr + 1}, ${opt.facadeGap}, ${drY}, -facadeThick);\n`;
+
+          if (opt.includeDrawersBoxes) {
+            const boxD = d - 50;
+            const boxH = Math.min(drawerHeight - 40, 160);
+            code += `  // Короб ящика ${dr + 1}\n`;
+            code += `  var pBoxSideL${dr + 1} = createPanel(${boxD}, ${boxH}, ldspThick, "Боковина ящика L ${dr + 1}", matCarcass);\n`;
+            code += `  setPos(pBoxSideL${dr + 1}, ${opt.ldspThickness + 13}, ${drY + 20}, 20);\n`;
+            code += `  var pBoxSideR${dr + 1} = createPanel(${boxD}, ${boxH}, ldspThick, "Боковина ящика R ${dr + 1}", matCarcass);\n`;
+            code += `  setPos(pBoxSideR${dr + 1}, ${w - opt.ldspThickness - 13 - opt.ldspThickness}, ${drY + 20}, 20);\n`;
+          }
+        }
+        code += `\n`;
+      } else if (doors > 0) {
+        code += `  // Распашные фасады (${doors} дв.)\n`;
+        const doorH = Math.round(carcassH - 2 * opt.facadeGap);
+        if (doors === 1) {
+          const doorW = Math.round(w - 2 * opt.facadeGap);
+          code += `  var pDoor = createPanel(${doorW}, ${doorH}, facadeThick, "Фасад распашной", matFacade);\n`;
+          code += `  setPos(pDoor, ${opt.facadeGap}, ${plinthH + opt.facadeGap}, -facadeThick);\n\n`;
+        } else {
+          const doorW = Math.round((w - 3 * opt.facadeGap) / 2);
+          code += `  var pDoorL = createPanel(${doorW}, ${doorH}, facadeThick, "Фасад левый", matFacade);\n`;
+          code += `  setPos(pDoorL, ${opt.facadeGap}, ${plinthH + opt.facadeGap}, -facadeThick);\n`;
+          code += `  var pDoorR = createPanel(${doorW}, ${doorH}, facadeThick, "Фасад правый", matFacade);\n`;
+          code += `  setPos(pDoorR, ${opt.facadeGap * 2 + doorW}, ${plinthH + opt.facadeGap}, -facadeThick);\n\n`;
         }
       }
-      code += `\n`;
-    } else if (doors > 0) {
-      code += `  // Распашные фасады (${doors} дв.)\n`;
-      const doorH = Math.round(carcassH - 2 * opt.facadeGap);
-      if (doors === 1) {
-        const doorW = Math.round(w - 2 * opt.facadeGap);
-        code += `  var pDoor = createPanel(${doorW}, ${doorH}, facadeThick, "Фасад распашной", matFacade);\n`;
-        code += `  setPos(pDoor, ${opt.facadeGap}, ${plinthH + opt.facadeGap}, -facadeThick);\n\n`;
-      } else {
-        const doorW = Math.round((w - 3 * opt.facadeGap) / 2);
-        code += `  var pDoorL = createPanel(${doorW}, ${doorH}, facadeThick, "Фасад левый", matFacade);\n`;
-        code += `  setPos(pDoorL, ${opt.facadeGap}, ${plinthH + opt.facadeGap}, -facadeThick);\n`;
-        code += `  var pDoorR = createPanel(${doorW}, ${doorH}, facadeThick, "Фасад правый", matFacade);\n`;
-        code += `  setPos(pDoorR, ${opt.facadeGap * 2 + doorW}, ${plinthH + opt.facadeGap}, -facadeThick);\n\n`;
+
+      // 8. Цоколь
+      if (hasPlinth && opt.includePlinth) {
+        code += `  // Цокольная планка\n`;
+        code += `  var pPlinth = createPanel(${w}, ${plinthH}, ldspThick, "Цоколь", matPlinth);\n`;
+        code += `  setPos(pPlinth, 0, 0, 30);\n\n`;
       }
-    }
 
-    // 8. Цоколь
-    if (hasPlinth && opt.includePlinth) {
-      code += `  // Цокольная планка\n`;
-      code += `  var pPlinth = createPanel(${w}, ${plinthH}, ldspThick, "Цоколь", matPlinth);\n`;
-      code += `  setPos(pPlinth, 0, 0, 30);\n\n`;
-    }
-
-    // 9. Столешница
-    if (isBase && opt.includeCountertop && mod.config.hasCountertop !== false) {
-      const topDepth = d + 40; // 40 мм свес спереди
-      code += `  // Столешница со свесом 40 мм\n`;
-      code += `  var pTabletop = createPanel(${w}, ${topDepth}, tabletopThick, "Столешница", matTabletop);\n`;
-      code += `  setPos(pTabletop, 0, ${plinthH + carcassH}, -40);\n\n`;
+      // 9. Столешница
+      if (isBase && opt.includeCountertop && mod.config.hasCountertop !== false) {
+        const topDepth = d + 40; // 40 мм свес спереди
+        code += `  // Столешница со свесом 40 мм\n`;
+        code += `  var pTabletop = createPanel(${w}, ${topDepth}, tabletopThick, "Столешница", matTabletop);\n`;
+        code += `  setPos(pTabletop, 0, ${plinthH + carcassH}, -40);\n\n`;
+      }
     }
 
     // Закрытие блока и установка глобальной позиции и вращения
@@ -351,28 +416,94 @@ export function generateBazisCutList(
     const doors = mod.config.doors || 0;
     const drawers = mod.config.drawers || 0;
     const shelves = mod.config.shelves || 0;
-
     const edgeFront = `${opt.frontEdgeThickness}x19`;
     const edgeInner = `${opt.innerEdgeThickness}x19`;
 
-    // 1. Боковины (2 шт: левая и правая)
-    parts.push({
-      pos: posCounter++,
-      code: `${modCode}.01`,
-      name: 'Боковина',
-      length: carcassH,
-      width: d,
-      thickness: opt.ldspThickness,
-      count: 2,
-      material: `ЛДСП ${opt.ldspThickness}мм Корпус`,
-      edgeL1: edgeFront,
-      edgeL2: '-',
-      edgeW1: edgeInner,
-      edgeW2: edgeInner,
-      groove: 'Паз 4х10 отступ 16',
-      moduleName: modName,
-      notes: 'Левая и правая',
-    });
+    const customParts = mod.config.customParts;
+    if (customParts && customParts.length > 0) {
+      const settings = opt.settings ?? DEFAULT_PROJECT_SETTINGS;
+
+      customParts.forEach((part, pIdx) => {
+        if (part.isVisible === false) return;
+        const geom = evaluatePartGeometry(
+          part,
+          { width: w, height: carcassH, depth: d },
+          settings,
+          customParts
+        );
+
+        let matName = part.materialName;
+        if (!matName) {
+          if (part.materialType === 'mdf_facade' || part.category === 'facade' || part.category === 'drawer') {
+            matName = `МДФ ${opt.facadeThickness}мм Фасад`;
+          } else if (part.materialType === 'hdf' || part.category === 'back') {
+            matName = `ХДФ ${opt.backWallThickness}мм Задняя стенка`;
+          } else {
+            matName = `ЛДСП ${opt.ldspThickness}мм Корпус`;
+          }
+        }
+
+        const isFacade = part.category === 'facade' || part.category === 'drawer';
+        const isBack = part.category === 'back' || part.materialType === 'hdf';
+
+        parts.push({
+          pos: posCounter++,
+          code: `${modCode}.${String(pIdx + 1).padStart(2, '0')}`,
+          name: part.name || `Деталь ${pIdx + 1}`,
+          length: Math.round(geom.cutLength),
+          width: Math.round(geom.cutWidth),
+          thickness: Math.round(geom.thickness),
+          count: 1,
+          material: matName,
+          edgeL1: isFacade ? '2.0x19' : (!isBack ? edgeFront : '-'),
+          edgeL2: isFacade ? '2.0x19' : '-',
+          edgeW1: isFacade ? '2.0x19' : (!isBack ? edgeInner : '-'),
+          edgeW2: isFacade ? '2.0x19' : '-',
+          groove: isBack ? 'Паз 4х8 отступ 16' : '-',
+          moduleName: modName,
+          notes: `Кастом (${part.category || 'корпус'})`,
+        });
+      });
+
+      // Столешница (если включена)
+      if (isBase && opt.includeCountertop && mod.config.hasCountertop !== false) {
+        parts.push({
+          pos: posCounter++,
+          code: `${modCode}.TT`,
+          name: 'Столешница',
+          length: w,
+          width: d + 40,
+          thickness: opt.countertopThickness,
+          count: 1,
+          material: `Постформинг ${opt.countertopThickness}мм HPL`,
+          edgeL1: 'Постформинг R=3',
+          edgeL2: 'Бэкинг',
+          edgeW1: 'Кромка HPL',
+          edgeW2: 'Кромка HPL',
+          groove: '-',
+          moduleName: modName,
+          notes: 'Столешница',
+        });
+      }
+    } else {
+      // 1. Боковины (2 шт: левая и правая)
+      parts.push({
+        pos: posCounter++,
+        code: `${modCode}.01`,
+        name: 'Боковина',
+        length: carcassH,
+        width: d,
+        thickness: opt.ldspThickness,
+        count: 2,
+        material: `ЛДСП ${opt.ldspThickness}мм Корпус`,
+        edgeL1: edgeFront,
+        edgeL2: '-',
+        edgeW1: edgeInner,
+        edgeW2: edgeInner,
+        groove: 'Паз 4х10 отступ 16',
+        moduleName: modName,
+        notes: 'Левая и правая',
+      });
 
     // 2. Дно
     const bottomW = w - 2 * opt.ldspThickness;
@@ -532,6 +663,7 @@ export function generateBazisCutList(
           moduleName: modName,
         });
       }
+    }
     }
   });
 
