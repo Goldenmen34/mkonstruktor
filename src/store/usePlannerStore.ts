@@ -324,7 +324,12 @@ export const usePlannerStore = create<PlannerState>()(
 
     let posX = 0;
     const baseElevation = projectSettings.baseBodyHeight + (projectSettings.hasPlinth ? projectSettings.plinthHeight : 0);
-    let posY = isTop ? topElevation : (isWall ? projectSettings.upperBaseStartHeight : (isBacksplash ? baseElevation : 0));
+    const defaultElevation = template.elevation ?? 0;
+    let posY = isTop
+      ? topElevation
+      : (isWall
+          ? (template.elevation ?? projectSettings.upperBaseStartHeight)
+          : (isBacksplash ? (template.elevation ?? baseElevation) : defaultElevation));
     let posZ = 0;
     let rotation = 0;
 
@@ -332,7 +337,13 @@ export const usePlannerStore = create<PlannerState>()(
 
     if (customPos) {
       posX = customPos.x;
-      posY = isTop ? (customPos.y ?? topElevation) : (isWall ? projectSettings.upperBaseStartHeight : (isBacksplash ? (customPos.y ?? baseElevation) : (customPos.y ?? 0)));
+      posY = isTop
+        ? (customPos.y ?? topElevation)
+        : (isWall
+            ? (customPos.y ?? template.elevation ?? projectSettings.upperBaseStartHeight)
+            : (isBacksplash
+                ? (customPos.y ?? template.elevation ?? baseElevation)
+                : (customPos.y ?? defaultElevation)));
       posZ = customPos.z;
 
       // Если в помещении есть стены, привязываем модуль к ближайшей стене с правильным разворотом
@@ -481,8 +492,6 @@ export const usePlannerStore = create<PlannerState>()(
         posZ = -room.length / 2 + dimDepth / 2 + 2;
         rotation = 0;
       }
-
-      posY = isTop ? topElevation : (isWall ? projectSettings.upperBaseStartHeight : 0);
     }
 
     const isBase = !isWall && !isTall && !isTop && (template.mainGroup === 'base' || template.subType === 'base' || template.subType === 'corner');

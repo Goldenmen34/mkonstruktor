@@ -1,0 +1,236 @@
+{
+  "version": "1.0",
+  "generator": "Bazis-Mebelshik МКонструктор Bridge",
+  "modelName": "Токарева ванная",
+  "bounds": {
+    "minX": 0,
+    "maxX": 840,
+    "minY": 200,
+    "maxY": 760,
+    "minZ": 0,
+    "maxZ": 500
+  },
+  "dimensions": {
+    "width": 840,
+    "height": 560,
+    "depth": 500
+  },
+  "elevation": 200,
+  "carcassHeight": 538,
+  "hasCountertop": true,
+  "countertopThickness": 22,
+  "hasPlinth": false,
+  "subType": "base",
+  "category": "kitchen",
+  "handleType": "gola",
+  "drawersCount": 2,
+  "materials": {
+    "carcass": "лдсп 16 LAMARTY Белоснежный",
+    "facade": "мдф 19мм пленка фреза GREENWOOD ZB 799-2 эмаль белая",
+    "countertop": "мдф 22мм пленка мыло GREEN WOOD MR 972 SFT Торос беж"
+  },
+  "panels": [
+    {
+      "name": "Боковина левая",
+      "material": "лдсп 16 LAMARTY Белоснежный",
+      "thickness": 16,
+      "width": 16,
+      "height": 538,
+      "depth": 484,
+      "position": {
+        "x": -412,
+        "y": 0,
+        "z": -8
+      },
+      "category": "carcass"
+    },
+    {
+      "name": "Боковина правая",
+      "material": "лдсп 16 LAMARTY Белоснежный",
+      "thickness": 16,
+      "width": 16,
+      "height": 538,
+      "depth": 484,
+      "position": {
+        "x": 412,
+        "y": 0,
+        "z": -8
+      },
+      "category": "carcass"
+    },
+    {
+      "name": "Дно тумбы",
+      "material": "лдсп 16 LAMARTY Белоснежный",
+      "thickness": 16,
+      "width": 808,
+      "height": 16,
+      "depth": 484,
+      "position": {
+        "x": 0,
+        "y": -261,
+        "z": -8
+      },
+      "category": "carcass"
+    },
+    {
+      "name": "Задняя стенка (царга)",
+      "material": "лдсп 16 LAMARTY Белоснежный",
+      "thickness": 16,
+      "width": 808,
+      "height": 100,
+      "depth": 16,
+      "position": {
+        "x": 0,
+        "y": 210,
+        "z": -242
+      },
+      "category": "carcass"
+    },
+    {
+      "name": "Столешница МДФ 22мм",
+      "material": "мдф 22мм пленка мыло GREEN WOOD MR 972 SFT Торос беж",
+      "thickness": 22,
+      "width": 840,
+      "height": 22,
+      "depth": 500,
+      "position": {
+        "x": 0,
+        "y": 280,
+        "z": 0
+      },
+      "category": "countertop"
+    },
+    {
+      "name": "Профиль Gola L верхний",
+      "material": "GOLA L золото",
+      "thickness": 19,
+      "width": 808,
+      "height": 57,
+      "depth": 26,
+      "position": {
+        "x": 0,
+        "y": 240,
+        "z": 235
+      },
+      "category": "hardware"
+    },
+    {
+      "name": "Профиль Gola C средний",
+      "material": "GOLA C золото",
+      "thickness": 19,
+      "width": 808,
+      "height": 73,
+      "depth": 26,
+      "position": {
+        "x": 0,
+        "y": -15,
+        "z": 235
+      },
+      "category": "hardware"
+    },
+    {
+      "name": "Фасад верхнего ящика (МДФ)",
+      "material": "мдф 19мм пленка фреза GREENWOOD ZB 799-2 эмаль белая",
+      "thickness": 19,
+      "width": 838,
+      "height": 228,
+      "depth": 19,
+      "position": {
+        "x": 0,
+        "y": 115,
+        "z": 240
+      },
+      "category": "facade"
+    },
+    {
+      "name": "Фасад нижнего ящика (МДФ)",
+      "material": "мдф 19мм пленка фреза GREENWOOD ZB 799-2 эмаль белая",
+      "thickness": 19,
+      "width": 838,
+      "height": 240,
+      "depth": 19,
+      "position": {
+        "x": 0,
+        "y": -145,
+        "z": 240
+      },
+      "category": "facade"
+    },
+    {
+      "name": "Ящик верхний (с вырезом под сифон)",
+      "material": "лдсп 16 LAMARTY Белоснежный",
+      "thickness": 16,
+      "width": 800,
+      "height": 120,
+      "depth": 400,
+      "position": {
+        "x": 0,
+        "y": 80,
+        "z": 0
+      },
+      "category": "drawer"
+    },
+    {
+      "name": "Ящик нижний глубокий",
+      "material": "лдсп 16 LAMARTY Белоснежный",
+      "thickness": 16,
+      "width": 800,
+      "height": 160,
+      "depth": 450,
+      "position": {
+        "x": 0,
+        "y": -150,
+        "z": 0
+      },
+      "category": "drawer"
+    }
+  ],
+  "fasteners": [
+    {
+      "name": "стяжка b-fix",
+      "count": 104
+    },
+    {
+      "name": "шкант 8х30мм",
+      "count": 58
+    },
+    {
+      "name": "евровинт 7х50",
+      "count": 56
+    },
+    {
+      "name": "шуруп 4х30мм",
+      "count": 4
+    },
+    {
+      "name": "шуруп 3,5х16мм",
+      "count": 4
+    },
+    {
+      "name": "Направляющая 3D-Control с доводчк., 450 мм, Firmax",
+      "count": 4
+    },
+    {
+      "name": "Направляющая 3D-Control с доводчк., 400 мм, Firmax",
+      "count": 4
+    }
+  ],
+  "hardware": [
+    {
+      "name": "Направляющие 3D-Control с доводчк., 450 мм, Firmax",
+      "count": 1
+    },
+    {
+      "name": "Направляющие 3D-Control с доводчк., 400 мм, Firmax",
+      "count": 1
+    },
+    {
+      "name": "GOLA L золото",
+      "count": 1
+    },
+    {
+      "name": "GOLA C золото",
+      "count": 1
+    }
+  ]
+}

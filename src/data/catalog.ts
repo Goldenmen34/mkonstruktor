@@ -178,6 +178,7 @@ export interface CatalogItemTemplate {
     height: number;
     depth: number;
   };
+  elevation?: number; // Высота подвеса/установки от пола (мм), например 200 мм для подвесных тумб или 1440 для навесных шкафов
   allowedDimensions?: {
     minWidth: number;
     maxWidth: number;

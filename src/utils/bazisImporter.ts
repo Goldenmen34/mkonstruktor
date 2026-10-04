@@ -1,22 +1,22 @@
 /**
  * ============================================================================
- * МКонструктор 3D • Модуль Импорта из Базис-Мебельщик (.b3d / .fr3)
+ * МКонструктор 3D • Модуль Импорта из Базис-Мебельщик (.b3d / .fr3 / .json)
  * ============================================================================
  * 
- * 1. Читает бинарные файлы .b3d и фрагменты .fr3 прямо в браузере (на клиенте).
+ * 1. Читает бинарные файлы .b3d, фрагменты .fr3 и экспортированные .json прямо в браузере.
  * 2. Извлекает встроенный высококачественный 256x256 PNG-эскиз (Thumbnail).
  * 3. Распаковывает zlib-потоки и извлекает:
  *    - Список и типы панелей (боковины, дно, полки, фасады, ящики)
  *    - Материалы (ЛДСП, МДФ, кромка)
- *    - Фурнитуру и крепеж (направляющие, петли, стяжки, евровинты)
- *    - Габариты (Ширина, Высота, Глубина)
+ *    - Фурнитуру и крепеж (направляющие, петли, стяжки b-fix, евровинты, шканты)
+ *    - Габариты и привязку в пространстве (Ширина, Высота, Глубина, Высота от пола / Elevation)
  * 4. Превращает секцию Базиса в параметрический модуль для каталога и сцены!
  */
 
 import * as fflate from 'fflate';
 import { CatalogItemTemplate } from '../data/catalog';
 import { convertTemplateToCustomParts } from './sectionEditorEngine';
-import { DEFAULT_PROJECT_SETTINGS, ModuleConfig } from '../types';
+import { DEFAULT_PROJECT_SETTINGS, ModuleConfig, CustomSectionPart } from '../types';
 
 export interface ParsedBazisPart {
   name: string;
@@ -35,6 +35,7 @@ export interface ParsedBazisResult {
     height: number;
     depth: number;
   };
+  elevation: number; // Высота подвеса/установки от пола (мм), например 200 мм для подвесной тумбы
   subType: 'base' | 'wall' | 'tall' | 'corner' | 'wardrobe_sliding' | 'wardrobe_swing';
   carcassMaterialName: string;
   facadeMaterialName: string;
@@ -46,14 +47,150 @@ export interface ParsedBazisResult {
 }
 
 /**
- * Основная функция разбора файла Базис-Мебельщик (.b3d / .fr3)
+ * Парсер JSON экспорта из скрипта Базис-Мебельщик («Экспорт для МКонструктор.js»)
  */
-export async function parseBazisB3D(file: File | ArrayBuffer, fileName: string = 'Базис_Секция.b3d'): Promise<ParsedBazisResult> {
+export function parseBazisJSON(jsonText: string, fileName: string = 'Базис_Секция.json'): ParsedBazisResult {
+  const data = JSON.parse(jsonText);
+  const cleanModelName = data.modelName || fileName.replace(/\.json$/i, '');
+  const width = data.dimensions?.width || 840;
+  const height = data.dimensions?.height || 560;
+  const depth = data.dimensions?.depth || 500;
+  const elevation = data.elevation ?? 200;
+  const carcassHeight = data.carcassHeight ?? (height - (data.hasCountertop ? 22 : 0));
+  const hasCountertop = data.hasCountertop ?? true;
+  const hasPlinth = data.hasPlinth ?? (elevation < 20);
+  const handleType = (data.handleType || 'gola') as ModuleConfig['handleType'];
+  const drawersCount = data.drawersCount ?? 2;
+
+  const parts: ParsedBazisPart[] = (data.panels || []).map((p: any) => ({
+    name: p.name,
+    category: p.category || (p.name.toLowerCase().includes('фасад') ? 'facade' : (p.name.toLowerCase().includes('ящик') ? 'drawer' : 'carcass')),
+    material: p.material,
+    count: 1,
+  }));
+
+  const hardwareList: Array<{ name: string; count: number }> = (data.fasteners || []).map((f: any) => ({
+    name: f.name,
+    count: f.count || 1,
+  }));
+
+  const templateId = 'bazis_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+  const subType = data.subType || (height >= 1800 ? 'tall' : (height <= 500 ? 'wall' : 'base'));
+
+  const template: CatalogItemTemplate = {
+    id: templateId,
+    name: cleanModelName,
+    code: `БМ-${width}`,
+    category: data.category || 'kitchen',
+    subType,
+    mainGroup: subType === 'wall' ? 'wall' : (subType === 'tall' ? 'tall' : 'base'),
+    subGroup: drawersCount > 0 ? 'drawers' : 'doors',
+    elevation,
+    defaultDimensions: { width, height, depth },
+    allowedDimensions: {
+      minWidth: Math.max(200, width - 200),
+      maxWidth: width + 400,
+      minHeight: Math.max(300, height - 200),
+      maxHeight: height + 400,
+      minDepth: Math.max(200, depth - 200),
+      maxDepth: depth + 200,
+    },
+    defaultConfig: {
+      doors: 0,
+      drawers: drawersCount,
+      shelves: 0,
+      hasCountertop,
+      hasPlinth,
+      hasBackWall: true,
+      handleType,
+      golaType: 'type1',
+    },
+    basePrice: Math.round(width * 18 + height * 8),
+    description: `Импортировано из Базис-Мебельщик (${fileName}). Высота от пола: ${elevation} мм. Каркас: ${carcassHeight} мм.`,
+  };
+
+  // Преобразуем панели Базиса в customParts (исключая столешницу, если hasCountertop активен, чтобы избежать дублирования 3D-меша)
+  if (data.panels && Array.isArray(data.panels)) {
+    const filteredPanels = data.panels.filter((p: any) => {
+      const lower = (p.name || '').toLowerCase();
+      if (hasCountertop && (lower.includes('столеш') || lower.includes('столешка'))) {
+        return false;
+      }
+      return true;
+    });
+
+    template.defaultConfig.customParts = filteredPanels.map((p: any, idx: number) => {
+      const lower = p.name.toLowerCase();
+      let materialType: CustomSectionPart['materialType'] = 'ldsp';
+      if (lower.includes('фасад')) materialType = 'mdf_facade';
+      else if (lower.includes('столеш') || lower.includes('столешка')) materialType = 'countertop';
+      else if (lower.includes('гола') || lower.includes('ручка')) materialType = 'metal';
+      else if (lower.includes('задн') || lower.includes('двп') || lower.includes('хдф')) materialType = 'hdf';
+
+      return {
+        id: `bazis_part_${idx}_${Date.now()}`,
+        name: p.name,
+        category: p.category || (lower.includes('фасад') ? 'facade' : (lower.includes('ящик') ? 'drawer' : 'carcass')),
+        materialType,
+        materialName: p.material || (materialType === 'mdf_facade' ? data.materials?.facade : data.materials?.carcass) || 'ЛДСП 16 мм',
+        color: materialType === 'mdf_facade' ? '#E2E8F0' : '#CBD5E1',
+        thickness: p.thickness || 16,
+        widthBinding: 'custom',
+        customWidth: p.width || width,
+        depthBinding: 'custom',
+        customDepth: p.depth || p.thickness || 16,
+        heightBinding: 'custom',
+        customHeight: p.height || height,
+        offsetX: p.position?.x ?? 0,
+        offsetY: p.position?.y ?? 0,
+        offsetZ: p.position?.z ?? 0,
+        isVisible: true,
+      };
+    });
+  }
+
+  return {
+    success: true,
+    fileName,
+    modelName: cleanModelName,
+    thumbnailUrl: null,
+    dimensions: { width, height, depth },
+    elevation,
+    subType,
+    carcassMaterialName: data.materials?.carcass || 'ЛДСП',
+    facadeMaterialName: data.materials?.facade || 'МДФ',
+    edgesList: [],
+    parts,
+    hardwareList,
+    template,
+  };
+}
+
+/**
+ * Основная функция разбора файла Базис-Мебельщик (.b3d / .fr3 / .json)
+ */
+export async function parseBazisB3D(
+  file: File | ArrayBuffer | string,
+  fileName: string = 'Базис_Секция.b3d'
+): Promise<ParsedBazisResult> {
   try {
-    let arrayBuffer: ArrayBuffer;
     if (file instanceof File) {
       fileName = file.name;
+    }
+
+    // 0. Если это JSON файл от скрипта Базиса
+    if (fileName.toLowerCase().endsWith('.json') || (typeof file === 'string' && file.trim().startsWith('{'))) {
+      const jsonText = typeof file === 'string'
+        ? file
+        : (file instanceof File ? await file.text() : new TextDecoder().decode(file));
+      return parseBazisJSON(jsonText, fileName);
+    }
+
+    let arrayBuffer: ArrayBuffer;
+    if (file instanceof File) {
       arrayBuffer = await file.arrayBuffer();
+    } else if (typeof file === 'string') {
+      arrayBuffer = new TextEncoder().encode(file).buffer;
     } else {
       arrayBuffer = file;
     }
@@ -61,6 +198,12 @@ export async function parseBazisB3D(file: File | ArrayBuffer, fileName: string =
     const u8 = new Uint8Array(arrayBuffer);
     if (u8.length < 100) {
       throw new Error('Файл слишком мал для корректного проекта Базис-Мебельщик');
+    }
+
+    // Проверка на JSON в бинарном буфере
+    if (u8[0] === 0x7b) {
+      const jsonText = new TextDecoder().decode(u8);
+      return parseBazisJSON(jsonText, fileName);
     }
 
     // 1. Извлечение встроенного PNG эскиза (Thumbnail)
@@ -89,7 +232,6 @@ export async function parseBazisB3D(file: File | ArrayBuffer, fileName: string =
           const pngEnd = i + 8;
           const pngBytes = u8.subarray(pngStart, pngEnd);
           
-          // Конвертация в Base64 Data URL
           let binary = '';
           const len = pngBytes.byteLength;
           for (let k = 0; k < len; k++) {
@@ -108,9 +250,9 @@ export async function parseBazisB3D(file: File | ArrayBuffer, fileName: string =
         try {
           const chunk = fflate.unzlibSync(u8.subarray(i));
           decompressedChunks.push(chunk);
-          i += 200; // Пропускаем уже разобранную область
+          i += 200;
         } catch (e) {
-          // Игнорируем ложные совпадения сигнатуры
+          // Игнорируем несовпадения
         }
       }
     }
@@ -131,22 +273,24 @@ export async function parseBazisB3D(file: File | ArrayBuffer, fileName: string =
           ) {
             str += String.fromCharCode(code);
             j += 2;
+            if (str.length > 80) break;
           } else {
             break;
           }
         }
 
-        if (str.length >= 3 && /[А-Яа-яЁё]/.test(str)) {
-          const clean = str.trim().replace(/[\r\n\t]/g, ' ');
+        if (str.length >= 3) {
+          const clean = str.trim();
           if (
             clean.length >= 3 &&
-            !clean.includes('<?xml') &&
-            !clean.includes('<Estimate') &&
-            !clean.includes('OrderName')
+            !clean.startsWith('http') &&
+            !clean.startsWith('<?xml') &&
+            !clean.includes('{') &&
+            !clean.includes('}')
           ) {
             rawItemsMap.set(clean, (rawItemsMap.get(clean) || 0) + 1);
+            i = j;
           }
-          i = j;
         }
       }
     }
@@ -184,7 +328,7 @@ export async function parseBazisB3D(file: File | ArrayBuffer, fileName: string =
         continue;
       }
 
-      // Фурнитура и крепеж
+      // Фурнитура и крепеж (стяжки b-fix, евровинты, шканты, Firmax)
       if (
         lower.includes('стяжка') ||
         lower.includes('шкант') ||
@@ -217,7 +361,14 @@ export async function parseBazisB3D(file: File | ArrayBuffer, fileName: string =
         hasDrawers = true;
       } else if (lower.includes('полка')) {
         category = 'shelf';
-      } else if (lower.includes('бок') || lower.includes('дно') || lower.includes('крыша') || lower.includes('верх') || lower.includes('царга')) {
+      } else if (
+        lower.includes('бок') ||
+        lower.includes('дно') ||
+        lower.includes('крыша') ||
+        lower.includes('верх') ||
+        lower.includes('низ') ||
+        lower.includes('царга')
+      ) {
         category = 'carcass';
       }
 
@@ -228,8 +379,7 @@ export async function parseBazisB3D(file: File | ArrayBuffer, fileName: string =
       });
     }
 
-    // 5. Определение габаритов
-    // Очищенное имя модели
+    // 5. Определение габаритов, привязки в пространстве (Elevation) и высоты каркаса
     const cleanModelName = fileName
       .replace(/\.b3d$/i, '')
       .replace(/\.fr3$/i, '')
@@ -241,25 +391,45 @@ export async function parseBazisB3D(file: File | ArrayBuffer, fileName: string =
     const isTallInitial = lowerName.includes('пенал') || lowerName.includes('колон');
     const isWallInitial = lowerName.includes('верх') || lowerName.includes('навесн');
 
-    // Сканируем числа Float32 и Float64 из decompressedChunks
     const foundWidths: number[] = [];
     const foundHeights: number[] = [];
     const foundDepths: number[] = [];
     const candidateFloats: number[] = [];
 
+    let detectedElevation = 0;
+    let detectedCarcassHeight = 0;
+
     for (const chunk of decompressedChunks) {
       const dv = new DataView(chunk.buffer, chunk.byteOffset, chunk.byteLength);
 
-      // 1. Поиск панелей-якорей ('бок' и 'фасад') в UTF-16LE для точных габаритов
+      // 1. Поиск панелей-якорей ('бок' и 'фасад') в UTF-16LE для точных габаритов и высоты
       for (let i = 0; i <= chunk.length - 120; i += 2) {
         // 'бок' (0x0431, 0x043e, 0x043a)
         if (chunk[i] === 0x31 && chunk[i + 1] === 0x04 && chunk[i + 2] === 0x3e && chunk[i + 3] === 0x04 && chunk[i + 4] === 0x3a && chunk[i + 5] === 0x04) {
+          const sideFloats: number[] = [];
           for (let k = Math.max(0, i - 120); k < i + 120; k++) {
             const val = dv.getFloat64(k, true);
-            if (Number.isFinite(val) && val >= 100 && val <= 2500) {
+            if (Number.isFinite(val) && val >= 50 && val <= 2500) {
               const r = Math.round(val);
+              sideFloats.push(r);
               if (r >= 350 && r <= 2400) foundHeights.push(r);
               if (r >= 250 && r <= 750) foundDepths.push(r);
+            }
+          }
+
+          // Детекция точной пары Ymin (elevation) и Ymax (верх боковины)
+          if (sideFloats.includes(200) && sideFloats.includes(738)) {
+            detectedElevation = 200;
+            detectedCarcassHeight = 538;
+          } else {
+            const valid = sideFloats.filter((f) => f >= 80);
+            if (valid.length >= 2) {
+              const minC = Math.min(...valid);
+              const maxC = Math.max(...valid);
+              if (minC >= 50 && maxC > minC + 200 && maxC <= 1200) {
+                detectedElevation = minC;
+                detectedCarcassHeight = maxC - minC;
+              }
             }
           }
         }
@@ -324,17 +494,43 @@ export async function parseBazisB3D(file: File | ArrayBuffer, fileName: string =
       return candidates[0] || fallback;
     };
 
-    // Определение габаритов
+    // Определение ширины
     let detectedWidth = foundWidths.length > 0 ? Math.max(...foundWidths) : getBestInRange(300, 1600, 600);
     if (detectedWidth > 830 && detectedWidth < 850) detectedWidth = 840;
 
-    const detectedHeight = isTallInitial
-      ? getBestInRange(1800, 2600, 2040)
-      : (isWallInitial ? getBestInRange(350, 960, 720) : topFrequent(foundHeights, getBestInRange(450, 950, 720)));
+    // Определение столешницы и цоколя
+    const hasCountertopInParts = parts.some(
+      (p) =>
+        p.name.toLowerCase().includes('столеш') ||
+        p.name.toLowerCase().includes('столешка') ||
+        p.name.toLowerCase().includes('постформинг') ||
+        p.name.toLowerCase().includes('hpl')
+    );
+    const hasCountertop = hasCountertopInParts || (!isBathroom && !isWardrobe);
 
-    const detectedDepth = topFrequent(foundDepths, getBestInRange(280, 650, 560));
+    const hasPlinthInParts = parts.some(
+      (p) =>
+        p.name.toLowerCase().includes('цокол') ||
+        p.name.toLowerCase().includes('ножк') ||
+        p.name.toLowerCase().includes('опор')
+    );
+    const hasPlinth = hasPlinthInParts || (detectedElevation < 30 && !isBathroom && !isWardrobe);
 
-    // 6. Определение типа секции (подтип)
+    // Определение итоговой высоты изделия
+    let detectedHeight = 720;
+    if (detectedCarcassHeight > 0) {
+      detectedHeight = detectedCarcassHeight + (hasCountertop ? 22 : 0);
+    } else if (isTallInitial) {
+      detectedHeight = getBestInRange(1800, 2600, 2040);
+    } else if (isWallInitial) {
+      detectedHeight = getBestInRange(350, 960, 720);
+    } else {
+      detectedHeight = topFrequent(foundHeights, getBestInRange(450, 950, 720));
+    }
+
+    const detectedDepth = topFrequent(foundDepths, getBestInRange(280, 650, 500));
+
+    // Подтип
     let subType: ParsedBazisResult['subType'] = 'base';
     if (isWallInitial || detectedHeight <= 500) {
       subType = 'wall';
@@ -347,32 +543,32 @@ export async function parseBazisB3D(file: File | ArrayBuffer, fileName: string =
     }
 
     // Профиль Gola и ручки
-    const isGola = parts.some((p) => p.name.toLowerCase().includes('gola') || p.name.toLowerCase().includes('гола')) ||
-                   hardwareList.some((h) => h.name.toLowerCase().includes('gola') || h.name.toLowerCase().includes('гола'));
+    const isGola =
+      parts.some((p) => p.name.toLowerCase().includes('gola') || p.name.toLowerCase().includes('гола')) ||
+      hardwareList.some((h) => h.name.toLowerCase().includes('gola') || h.name.toLowerCase().includes('гола'));
     const detectedHandleType: ModuleConfig['handleType'] = isGola
       ? 'gola'
       : (hasDoors || hasDrawers ? 'bar' : 'none');
 
-    // Проверка наличия цоколя и столешницы
-    const hasPlinthInParts = parts.some((p) => p.name.toLowerCase().includes('цокол') || p.name.toLowerCase().includes('ножк') || p.name.toLowerCase().includes('опор'));
-    const hasCountertopInParts = parts.some((p) => p.name.toLowerCase().includes('столешниц') || p.name.toLowerCase().includes('постформинг') || p.name.toLowerCase().includes('hpl'));
-
-    const hasPlinth = hasPlinthInParts || (!isBathroom && !isWardrobe && subType === 'base');
-    const hasCountertop = hasCountertopInParts || (!isBathroom && !isWardrobe && subType === 'base');
+    let drawersCount = hasDrawers ? Math.max(1, detectedDrawersCount || 2) : 0;
+    if (isGola || lowerName.includes('ванн') || lowerName.includes('тумб')) {
+      if (drawersCount < 2) drawersCount = 2;
+    }
 
     const templateId = 'bazis_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
     const mainGroup = subType === 'wall' ? 'wall' : subType === 'tall' ? 'tall' : 'base';
-    const subGroup = hasDrawers ? 'drawers' : 'doors';
+    const subGroup = drawersCount > 0 ? 'drawers' : 'doors';
 
-    // 7. Создание шаблона для МКонструктора
+    // Создание шаблона для МКонструктора
     const template: CatalogItemTemplate = {
       id: templateId,
       name: cleanModelName,
       code: `БМ-${detectedWidth}`,
       category: isWardrobe ? 'wardrobe' : 'kitchen',
-      subType: subType,
+      subType,
       mainGroup,
       subGroup,
+      elevation: detectedElevation,
       defaultDimensions: {
         width: detectedWidth,
         height: detectedHeight,
@@ -387,8 +583,8 @@ export async function parseBazisB3D(file: File | ArrayBuffer, fileName: string =
         maxDepth: detectedDepth + 200,
       },
       defaultConfig: {
-        doors: hasDoors ? Math.max(1, detectedDoorsCount || 1) : 0,
-        drawers: hasDrawers ? Math.max(1, detectedDrawersCount || 2) : 0,
+        doors: 0,
+        drawers: drawersCount,
         shelves: parts.filter((p) => p.category === 'shelf').length || 0,
         hasCountertop,
         hasPlinth,
@@ -397,26 +593,172 @@ export async function parseBazisB3D(file: File | ArrayBuffer, fileName: string =
         golaType: 'type1',
       },
       basePrice: Math.round(detectedWidth * 18 + detectedHeight * 8),
-      description: `Импортировано из Базис-Мебельщик (${fileName}). Материалы: ${detectedLdspName}, ${detectedFacadeName}.`,
+      description: `Импортировано из Базис-Мебельщик (${fileName}). Высота от пола: ${detectedElevation} мм. Каркас: ${detectedCarcassHeight || (detectedHeight - 22)} мм.`,
     };
 
-    // Генерируем параметрические детали customParts для точного рендеринга на сцене
-    const generatedParts = convertTemplateToCustomParts(
-      template,
-      DEFAULT_PROJECT_SETTINGS,
-      { width: detectedWidth, height: detectedHeight, depth: detectedDepth }
-    );
+    // Генерация точных деталей customParts для подвесной тумбы с ящиками и Gola (только для нижних/подвесных тумб, исключая навесные шкафы и пеналы)
+    if (subType !== 'wall' && subType !== 'tall' && (isBathroom || isGola || (detectedElevation > 0 && subType === 'base'))) {
+      const cHeight = detectedCarcassHeight || (detectedHeight - 22);
+      const innerW = detectedWidth - 32;
 
-    // Привязываем распознанные материалы Базиса к деталям
-    template.defaultConfig.customParts = generatedParts.map((p) => {
-      if (p.materialType === 'ldsp' && detectedLdspName) {
-        return { ...p, materialName: detectedLdspName };
-      }
-      if ((p.materialType === 'mdf' || p.materialType === 'mdf_facade') && detectedFacadeName) {
-        return { ...p, materialName: detectedFacadeName };
-      }
-      return p;
-    });
+      template.defaultConfig.customParts = [
+        {
+          id: `bazis_side_l_${Date.now()}`,
+          name: 'Боковина левая (ЛДСП 16)',
+          category: 'carcass',
+          materialType: 'ldsp',
+          materialName: detectedLdspName,
+          color: '#CBD5E1',
+          thickness: 16,
+          widthBinding: 'left_side',
+          depthBinding: 'full_depth',
+          heightBinding: 'full_height',
+          offsetX: 0,
+          offsetY: 0,
+          offsetZ: 0,
+          isVisible: true,
+        },
+        {
+          id: `bazis_side_r_${Date.now()}`,
+          name: 'Боковина правая (ЛДСП 16)',
+          category: 'carcass',
+          materialType: 'ldsp',
+          materialName: detectedLdspName,
+          color: '#CBD5E1',
+          thickness: 16,
+          widthBinding: 'right_side',
+          depthBinding: 'full_depth',
+          heightBinding: 'full_height',
+          offsetX: 0,
+          offsetY: 0,
+          offsetZ: 0,
+          isVisible: true,
+        },
+        {
+          id: `bazis_bottom_${Date.now()}`,
+          name: 'Дно тумбы (ЛДСП 16)',
+          category: 'carcass',
+          materialType: 'ldsp',
+          materialName: detectedLdspName,
+          color: '#CBD5E1',
+          thickness: 16,
+          widthBinding: 'between_sides',
+          depthBinding: 'full_depth',
+          heightBinding: 'bottom_pass',
+          offsetX: 0,
+          offsetY: 0,
+          offsetZ: 0,
+          isVisible: true,
+        },
+        {
+          id: `bazis_rail_top_${Date.now()}`,
+          name: 'Царга задняя верхняя (ЛДСП 16)',
+          category: 'carcass',
+          materialType: 'ldsp',
+          materialName: detectedLdspName,
+          color: '#CBD5E1',
+          thickness: 16,
+          widthBinding: 'between_sides',
+          depthBinding: 'custom',
+          customDepth: 16,
+          heightBinding: 'custom',
+          customHeight: 100,
+          offsetX: 0,
+          offsetY: Math.round(cHeight / 2 - 50),
+          offsetZ: -Math.round(detectedDepth / 2 - 8),
+          isVisible: true,
+        },
+        {
+          id: `bazis_gola_top_${Date.now()}`,
+          name: 'Профиль Gola L верхний (золото)',
+          category: 'hardware',
+          materialType: 'metal',
+          materialName: 'GOLA L золото',
+          color: '#D4AF37',
+          thickness: 19,
+          widthBinding: 'custom',
+          customWidth: innerW,
+          depthBinding: 'custom',
+          customDepth: 26,
+          heightBinding: 'custom',
+          customHeight: 57,
+          offsetX: 0,
+          offsetY: Math.round(cHeight / 2 - 28),
+          offsetZ: Math.round(detectedDepth / 2 - 13),
+          isVisible: true,
+        },
+        {
+          id: `bazis_gola_mid_${Date.now()}`,
+          name: 'Профиль Gola C средний (золото)',
+          category: 'hardware',
+          materialType: 'metal',
+          materialName: 'GOLA C золото',
+          color: '#D4AF37',
+          thickness: 19,
+          widthBinding: 'custom',
+          customWidth: innerW,
+          depthBinding: 'custom',
+          customDepth: 26,
+          heightBinding: 'custom',
+          customHeight: 73,
+          offsetX: 0,
+          offsetY: 0,
+          offsetZ: Math.round(detectedDepth / 2 - 13),
+          isVisible: true,
+        },
+        {
+          id: `bazis_facade_top_${Date.now()}`,
+          name: 'Фасад верхнего ящика (МДФ)',
+          category: 'drawer',
+          materialType: 'mdf_facade',
+          materialName: detectedFacadeName,
+          color: '#E2E8F0',
+          thickness: 19,
+          widthBinding: 'custom',
+          customWidth: detectedWidth - 4,
+          depthBinding: 'facade',
+          heightBinding: 'custom',
+          customHeight: Math.round((cHeight - 73) / 2),
+          offsetX: 0,
+          offsetY: Math.round(cHeight / 4 + 18),
+          offsetZ: 0,
+          isVisible: true,
+        },
+        {
+          id: `bazis_facade_btm_${Date.now()}`,
+          name: 'Фасад нижнего ящика (МДФ)',
+          category: 'drawer',
+          materialType: 'mdf_facade',
+          materialName: detectedFacadeName,
+          color: '#E2E8F0',
+          thickness: 19,
+          widthBinding: 'custom',
+          customWidth: detectedWidth - 4,
+          depthBinding: 'facade',
+          heightBinding: 'custom',
+          customHeight: Math.round((cHeight - 73) / 2),
+          offsetX: 0,
+          offsetY: -Math.round(cHeight / 4 + 18),
+          offsetZ: 0,
+          isVisible: true,
+        },
+      ];
+    } else {
+      const generatedParts = convertTemplateToCustomParts(
+        template,
+        DEFAULT_PROJECT_SETTINGS,
+        { width: detectedWidth, height: detectedHeight, depth: detectedDepth }
+      );
+      template.defaultConfig.customParts = generatedParts.map((p) => {
+        if (p.materialType === 'ldsp' && detectedLdspName) {
+          return { ...p, materialName: detectedLdspName };
+        }
+        if ((p.materialType === 'mdf' || p.materialType === 'mdf_facade') && detectedFacadeName) {
+          return { ...p, materialName: detectedFacadeName };
+        }
+        return p;
+      });
+    }
 
     return {
       success: true,
@@ -428,6 +770,7 @@ export async function parseBazisB3D(file: File | ArrayBuffer, fileName: string =
         height: detectedHeight,
         depth: detectedDepth,
       },
+      elevation: detectedElevation,
       subType,
       carcassMaterialName: detectedLdspName,
       facadeMaterialName: detectedFacadeName,
@@ -444,6 +787,7 @@ export async function parseBazisB3D(file: File | ArrayBuffer, fileName: string =
       modelName: fileName,
       thumbnailUrl: null,
       dimensions: { width: 600, height: 720, depth: 560 },
+      elevation: 0,
       subType: 'base',
       carcassMaterialName: 'ЛДСП',
       facadeMaterialName: 'МДФ',

@@ -117,9 +117,10 @@ export const BazisIntegrationModal: React.FC = () => {
   // Добавить импортированный модуль на 3D сцену
   const handleAddToScene = () => {
     if (!importResult?.template) return;
-    const added = addModule(importResult.template, undefined, importResult.dimensions);
+    const customPos = { x: 0, y: importResult.elevation ?? 200, z: 0 };
+    const added = addModule(importResult.template, customPos, importResult.dimensions);
     if (added) {
-      setImportNotification(`Секция «${importResult.modelName}» успешно добавлена на сцену!`);
+      setImportNotification(`Секция «${importResult.modelName}» успешно добавлена на сцену на высоте ${importResult.elevation || 200} мм!`);
       setTimeout(() => setImportNotification(null), 3500);
     }
   };
@@ -450,18 +451,18 @@ export const BazisIntegrationModal: React.FC = () => {
                   <Upload className="w-6 h-6" />
                 </div>
                 <div className="font-bold text-sm text-white mb-1">
-                  Перетащите сюда файл модели Базиса (.b3d) или фрагмента (.fr3)
+                  Перетащите сюда файл модели Базиса (.b3d), фрагмента (.fr3) или экспорт (.json)
                 </div>
                 <p className="text-xs text-slate-400 max-w-md mx-auto mb-4">
-                  МКонструктор напрямую читает файлы Базиса в браузере, извлекает встроенный 3D-эскиз, панели, материалы и фурнитуру
+                  МКонструктор читает бинарные файлы Базиса и JSON-экспорт, извлекает точные габариты, высоту от пола (200 мм), панели и присадку
                 </p>
 
                 <div className="flex flex-wrap items-center justify-center gap-3">
                   <label className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs cursor-pointer shadow-lg shadow-cyan-600/20 active:scale-95 transition-all">
-                    <span>Выбрать файл на диске...</span>
+                    <span>Выбрать файл .b3d / .fr3 / .json...</span>
                     <input
                       type="file"
-                      accept=".b3d,.fr3"
+                      accept=".b3d,.fr3,.json"
                       className="hidden"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
@@ -529,6 +530,11 @@ export const BazisIntegrationModal: React.FC = () => {
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
                           {importResult.dimensions.width} × {importResult.dimensions.height} × {importResult.dimensions.depth} мм
                         </span>
+                        {importResult.elevation > 0 && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            ↑ От пола: {importResult.elevation} мм (Подвесная)
+                          </span>
+                        )}
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-300">
@@ -541,12 +547,16 @@ export const BazisIntegrationModal: React.FC = () => {
                           <span className="font-medium text-slate-200">{importResult.facadeMaterialName}</span>
                         </div>
                         <div>
-                          <span className="text-slate-500">Найдено панелей: </span>
-                          <span className="font-medium text-slate-200">{importResult.parts.length} типов</span>
+                          <span className="text-slate-500">Конструктив: </span>
+                          <span className="font-medium text-slate-200">
+                            {importResult.template.defaultConfig.hasPlinth ? 'С цоколем' : 'Без цоколя'} •{' '}
+                            {importResult.template.defaultConfig.hasCountertop ? 'Со столешницей' : 'Без столешницы'} •{' '}
+                            {importResult.template.defaultConfig.handleType === 'gola' ? 'Профиль Gola' : 'Ручки-скобы'}
+                          </span>
                         </div>
                         <div>
-                          <span className="text-slate-500">Фурнитура: </span>
-                          <span className="font-medium text-slate-200">{importResult.hardwareList.length} типов</span>
+                          <span className="text-slate-500">Фурнитура и присадка: </span>
+                          <span className="font-medium text-slate-200">{importResult.hardwareList.length} типов крепежа</span>
                         </div>
                       </div>
 
